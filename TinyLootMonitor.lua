@@ -1,5 +1,15 @@
 local frameList = {}
 
+local backdrop = {
+	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
+	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
+	tile = true,
+	tileEdge = true,
+	tileSize = 16,
+	edgeSize = 16,
+	insets = { left = 4, right = 4, top = 4, bottom = 4 },
+};
+
 local function SortStack(fPool, fList, fAnchor)
     wipe(fList)
     local i = 1
@@ -24,12 +34,8 @@ anchor:SetPoint("CENTER")
 anchor:SetSize(150,20)
 anchor:EnableMouse(true)
 anchor:SetMovable(true)
-anchor:SetScript("OnMouseDown", function(self)
-    self:StartMoving()
-end)
-anchor:SetScript("OnMouseUp", function(self)
-    self:StopMovingOrSizing()
-end)
+anchor:SetScript("OnMouseDown", function(self) self:StartMoving() end)
+anchor:SetScript("OnMouseUp", function(self) self:StopMovingOrSizing() end)
 anchor.bg = anchor:CreateTexture(nil, "BACKGROUND")
 anchor.bg:SetAllPoints()
 anchor.bg:SetColorTexture(0,1,0,0.2)
@@ -38,20 +44,18 @@ anchor.text:SetText("Anchor")
 anchor.text:SetPoint("CENTER")
 
 local function FrameCreation(fPool)
-    local f = CreateFrame("Frame")
+    local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
+    f:SetBackdrop(backdrop)
     f:SetPoint("CENTER")
-    f:SetSize(150,20)
+    f:SetSize(150,40)
     f:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" then
             fPool:Release(f)
             frameList = SortStack(fPool, frameList, anchor)
         end
     end)
-    f.bg = f:CreateTexture(nil, "BACKGROUND")
-    f.bg:SetAllPoints()
-    f.bg:SetColorTexture(0,1,0,0.2)
-    f.text = f:CreateFontString(nil, "ARTWORK", "GameFontNormalOutline")
-    f.text:SetPoint("LEFT")
+    f.text = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
+    f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -5)
     f.sec = GetTimePreciseSec()
     return f
 end
@@ -62,7 +66,7 @@ end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
-for i = 1, 10 do
+for i = 1, 5 do
     frameList[i] = pool:Acquire()
     frameList[i].text:SetText(i)
 end
@@ -70,10 +74,3 @@ end
 frameList = SortStack(pool, frameList, anchor)
 
 for k,v in pairs(frameList) do v:Show() end
-
-anchor:HookScript("OnMouseUp", function()
-    frameList[#frameList+1] = pool:Acquire()
-    frameList[#frameList]:Show()
-    frameList[#frameList].text:SetText(#frameList)
-    frameList = SortStack(pool, frameList, anchor)
-end)
