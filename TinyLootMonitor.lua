@@ -13,11 +13,12 @@ local backdrop = {
 local function GetLoot(...)
     local info = {...}
     local link = info[1]:match("(|c.+|r)")
-    print(link)
     local guid = info[12]
     local player = select(6, GetPlayerInfoByGUID(guid))
+    local class = select(2, GetPlayerInfoByGUID(guid))
+    local classColor = C_ClassColor.GetClassColor(class)
+    player = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
-    print(icon)
     return icon, player, link
 end
 
@@ -38,7 +39,6 @@ local function SortStack(fPool, fList, fAnchor)
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
     end
-    return fList
 end
 
 --[[local function AnimateFrame(frame, outOnly)
@@ -68,7 +68,7 @@ end]]
 
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor")
 anchor:SetPoint("CENTER")
-anchor:SetSize(150,20)
+anchor:SetSize(200,20)
 anchor:EnableMouse(true)
 anchor:SetMovable(true)
 anchor:SetScript("OnMouseDown", function(self) self:StartMoving() end)
@@ -85,15 +85,15 @@ local function FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
     f:SetBackdrop(backdrop)
     f:SetPoint("CENTER")
-    f:SetSize(150,40)
+    f:SetSize(200,50)
     f:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" then
             fPool:Release(f)
-            frameList = SortStack(fPool, frameList, anchor)
+            SortStack(fPool, frameList, anchor)
         end
     end)
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetSize(24,24)
+    f.icon:SetSize(30,30)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
     f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
     f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0)
