@@ -1,4 +1,5 @@
 local frameList = {}
+local nLoot = 1
 
 local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
@@ -19,7 +20,8 @@ local function GetLoot(...)
     local classColor = C_ClassColor.GetClassColor(class)
     player = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
-    return icon, player, link
+    local itemID = info[1]:match("item:(%d*)")
+    return icon, player, link, itemID
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -31,6 +33,7 @@ local function SortStack(fPool, fList, fAnchor)
     end
     if fList[1] == nil then return fList end
     sort(fList, function(a,b) return a.sec < b.sec end)
+    print(fList[#fList].sec)
     if #fList == 1 then
         fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
     else
@@ -39,6 +42,17 @@ local function SortStack(fPool, fList, fAnchor)
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
     end
+end
+
+local function SetToastTooltip(frame, item)
+    frame:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:SetItemByID(item)
+        GameTooltip:Show()
+    end)
+    frame:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
 end
 
 --[[local function AnimateFrame(frame, outOnly)
@@ -99,12 +113,12 @@ local function FrameCreation(fPool)
     f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0)
     f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -2)
-    f.sec = GetTimePreciseSec()
     return f
 end
 
 local function FrameResetter(fPool, frame)
     frame:Hide()
+    --SortStack(fPool, frameList, anchor)
 end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
@@ -117,11 +131,14 @@ frameList[1].icon:SetTexture(132089)]]
 local m = CreateFrame("Frame")
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
-    local icon, player, link = GetLoot(...)
+    local icon, player, link, itemID = GetLoot(...)
     frameList[#frameList+1] = pool:Acquire()
-    SortStack(pool, frameList, anchor)
     frameList[#frameList].icon:SetTexture(icon)
     frameList[#frameList].name:SetText(player)
     frameList[#frameList].item:SetText(link)
+    SetToastTooltip(frameList[#frameList], itemID)
     frameList[#frameList]:Show()
+    frameList[#frameList].sec = nLoot
+    nLoot = nLoot + 1
+    SortStack(pool, frameList, anchor)
 end)
