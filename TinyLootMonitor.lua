@@ -10,6 +10,17 @@ local backdrop = {
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 };
 
+local function GetLoot(...)
+    local info = {...}
+    local link = info[1]:match("(|c.+|r)")
+    print(link)
+    local guid = info[12]
+    local player = select(6, GetPlayerInfoByGUID(guid))
+    local icon = select(10, GetItemInfo(link))
+    print(icon)
+    return icon, player, link
+end
+
 local function SortStack(fPool, fList, fAnchor)
     wipe(fList)
     local i = 1
@@ -17,6 +28,7 @@ local function SortStack(fPool, fList, fAnchor)
         fList[i] = widget
         i = i + 1
     end
+    if fList[1] == nil then return fList end
     sort(fList, function(a,b) return a.sec < b.sec end)
     if #fList == 1 then
         fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
@@ -28,6 +40,31 @@ local function SortStack(fPool, fList, fAnchor)
     end
     return fList
 end
+
+--[[local function AnimateFrame(frame, outOnly)
+    local groupFI = frame:CreateAnimationGroup()
+    local fadeIn = groupFI:CreateAnimation("Alpha")
+    fadeIn:SetFromAlpha(0.3)
+    fadeIn:SetToAlpha(1)
+    fadeIn:SetDuration(1.5)
+    fadeIn:SetSmoothing("IN")
+    local groupFO = frame:CreateAnimationGroup()
+    local fadeOut = groupFO:CreateAnimation("Alpha")
+    fadeOut:SetStartDelay(3)
+    fadeOut:SetFromAlpha(1)
+    fadeOut:SetToAlpha(0)
+    fadeOut:SetDuration(1)
+    fadeOut:SetSmoothing("OUT")
+    groupFO:SetToFinalAlpha()
+    if not outOnly then
+        groupFI:Play()
+        groupFO:Play()
+    else
+        groupFI:Stop()
+        groupFO:Play()
+    end
+    return group
+end]]
 
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor")
 anchor:SetPoint("CENTER")
@@ -42,6 +79,7 @@ anchor.bg:SetColorTexture(0,1,0,0.2)
 anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormalOutline")
 anchor.text:SetText("Anchor")
 anchor.text:SetPoint("CENTER")
+anchor:Hide()
 
 local function FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
@@ -54,8 +92,13 @@ local function FrameCreation(fPool)
             frameList = SortStack(fPool, frameList, anchor)
         end
     end)
-    f.text = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
-    f.text:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -5)
+    f.icon = f:CreateTexture(nil, "ARTWORK")
+    f.icon:SetSize(24,24)
+    f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
+    f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
+    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0)
+    f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
+    f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -2)
     f.sec = GetTimePreciseSec()
     return f
 end
@@ -66,11 +109,19 @@ end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
-for i = 1, 5 do
-    frameList[i] = pool:Acquire()
-    frameList[i].text:SetText(i)
-end
+--[[frameList[1] = pool:Acquire()
+SortStack(pool, frameList, anchor)
+frameList[1]:Show()
+frameList[1].icon:SetTexture(132089)]]
 
-frameList = SortStack(pool, frameList, anchor)
-
-for k,v in pairs(frameList) do v:Show() end
+local m = CreateFrame("Frame")
+m:RegisterEvent("CHAT_MSG_LOOT")
+m:SetScript("OnEvent", function(self, event, ...)
+    local icon, player, link = GetLoot(...)
+    frameList[#frameList+1] = pool:Acquire()
+    SortStack(pool, frameList, anchor)
+    frameList[#frameList].icon:SetTexture(icon)
+    frameList[#frameList].name:SetText(player)
+    frameList[#frameList].item:SetText(link)
+    frameList[#frameList]:Show()
+end)
