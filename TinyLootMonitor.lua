@@ -44,7 +44,7 @@ local function FrameCreation(fPool)
     f:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" then
             fPool:Release(f)
-            frameStack = SortStack(fPool, frameList, anchor)
+            frameList = SortStack(fPool, frameList, anchor)
         end
     end)
     f.bg = f:CreateTexture(nil, "BACKGROUND")
