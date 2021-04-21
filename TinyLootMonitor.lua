@@ -11,18 +11,18 @@ local backdrop = {
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 };
 
-local function GetLoot(...)
+local function LootInfo(...)
     local info = {...}
     local link = info[1]:match("(|c.+|r)")
     local guid = info[12]
     local player = select(6, GetPlayerInfoByGUID(guid))
     local class = select(2, GetPlayerInfoByGUID(guid))
     local classColor = C_ClassColor.GetClassColor(class)
-    player = classColor:WrapTextInColorCode(player)
+    local cPlayer = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
     local itemID = info[1]:match("item:(%d*)")
     local quality = select(3, GetItemInfo(link))
-    return icon, player, link, itemID, quality
+    return icon, player, cPlayer, link, itemID, quality
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -118,7 +118,6 @@ end
 
 local function FrameResetter(fPool, frame)
     frame:Hide()
-    --SortStack(fPool, fL, anchor)
 end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
@@ -131,12 +130,17 @@ fL[1].icon:SetTexture(132089)]]
 local m = CreateFrame("Frame")
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
-    local icon, player, link, itemID, quality = GetLoot(...)
+    local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
     if quality >= 0 then
         fL[#fL+1] = pool:Acquire()
         fL[#fL].icon:SetTexture(icon)
-        fL[#fL].name:SetText(player)
+        fL[#fL].name:SetText(cPlayer)
         fL[#fL].item:SetText(link)
+        fL[#fL]:HookScript("OnMouseUp", function(self, button)
+            if button == "LeftButton" and IsShiftKeyDown() then
+                SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
+            end
+        end)
         SetToastTooltip(fL[#fL], itemID)
         fL[#fL]:Show()
         fL[#fL].sec = nLoot
