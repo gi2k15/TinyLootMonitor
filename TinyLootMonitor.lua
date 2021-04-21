@@ -150,8 +150,10 @@ local function FrameCreation(fPool)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
     f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
     f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, -3)
+    f.name:SetPoint("TOPRIGHT", f, "TOPRIGHT", -10, -10)
     f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
-    f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -2)
+    f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -4)
+    f.item:SetPoint("TOPRIGHT", f.name, "BOTTOMRIGHT", 0, -4)
     return f
 end
 
