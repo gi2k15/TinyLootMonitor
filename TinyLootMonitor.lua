@@ -1,4 +1,4 @@
-local frameList = {}
+local fL = {}
 local nLoot = 1
 
 local backdrop = {
@@ -21,7 +21,8 @@ local function GetLoot(...)
     player = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
     local itemID = info[1]:match("item:(%d*)")
-    return icon, player, link, itemID
+    local quality = select(3, GetItemInfo(link))
+    return icon, player, link, itemID, quality
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -33,7 +34,6 @@ local function SortStack(fPool, fList, fAnchor)
     end
     if fList[1] == nil then return fList end
     sort(fList, function(a,b) return a.sec < b.sec end)
-    print(fList[#fList].sec)
     if #fList == 1 then
         fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
     else
@@ -103,14 +103,14 @@ local function FrameCreation(fPool)
     f:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" then
             fPool:Release(f)
-            SortStack(fPool, frameList, anchor)
+            SortStack(fPool, fL, anchor)
         end
     end)
     f.icon = f:CreateTexture(nil, "ARTWORK")
     f.icon:SetSize(30,30)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
     f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
-    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0)
+    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, -3)
     f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -2)
     return f
@@ -118,27 +118,29 @@ end
 
 local function FrameResetter(fPool, frame)
     frame:Hide()
-    --SortStack(fPool, frameList, anchor)
+    --SortStack(fPool, fL, anchor)
 end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
---[[frameList[1] = pool:Acquire()
-SortStack(pool, frameList, anchor)
-frameList[1]:Show()
-frameList[1].icon:SetTexture(132089)]]
+--[[fL[1] = pool:Acquire()
+SortStack(pool, fL, anchor)
+fL[1]:Show()
+fL[1].icon:SetTexture(132089)]]
 
 local m = CreateFrame("Frame")
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
-    local icon, player, link, itemID = GetLoot(...)
-    frameList[#frameList+1] = pool:Acquire()
-    frameList[#frameList].icon:SetTexture(icon)
-    frameList[#frameList].name:SetText(player)
-    frameList[#frameList].item:SetText(link)
-    SetToastTooltip(frameList[#frameList], itemID)
-    frameList[#frameList]:Show()
-    frameList[#frameList].sec = nLoot
-    nLoot = nLoot + 1
-    SortStack(pool, frameList, anchor)
+    local icon, player, link, itemID, quality = GetLoot(...)
+    if quality >= 0 then
+        fL[#fL+1] = pool:Acquire()
+        fL[#fL].icon:SetTexture(icon)
+        fL[#fL].name:SetText(player)
+        fL[#fL].item:SetText(link)
+        SetToastTooltip(fL[#fL], itemID)
+        fL[#fL]:Show()
+        fL[#fL].sec = nLoot
+        nLoot = nLoot + 1
+        SortStack(pool, fL, anchor)
+    end
 end)
