@@ -46,7 +46,7 @@ end
 
 local function SetToastTooltip(frame, item)
     frame:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, 50)
         GameTooltip:SetItemByID(item)
         GameTooltip:Show()
     end)
