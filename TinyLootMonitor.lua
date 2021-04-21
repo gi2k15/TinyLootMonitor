@@ -14,10 +14,6 @@ local rarity = {
     artifact = 6,
 }
 
-local fL = {}
-local nLoot = 1
-local addonName = "|c002FC5D0TLM:|r"
-
 local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
@@ -27,6 +23,10 @@ local backdrop = {
 	edgeSize = 16,
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
+
+local fL = {}
+local nLoot = 1
+local addonName = "|c002FC5D0TLM:|r"
 
 local function GetKey(tab, value)
     for k,v in pairs(tab) do
@@ -57,12 +57,10 @@ local function SortStack(fPool, fList, fAnchor)
         fList[i] = widget
         i = i + 1
     end
-    if fList[1] == nil then return fList end
+    if fList[1] == nil then return end
     sort(fList, function(a,b) return a.sec < b.sec end)
-    if #fList == 1 then
-        fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
-    else
-        fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
+    fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
+    if #fList > 1 then
         for i = 2, #fList do
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
@@ -147,12 +145,6 @@ local function FrameCreation(fPool)
     f:SetBackdrop(backdrop)
     f:SetPoint("CENTER")
     f:SetSize(200,50)
-    f:SetScript("OnMouseUp", function(self, button)
-        if button == "RightButton" then
-            fPool:Release(f)
-            SortStack(fPool, fL, anchor)
-        end
-    end)
     f.icon = f:CreateTexture(nil, "ARTWORK")
     f.icon:SetSize(30,30)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
@@ -175,14 +167,19 @@ m:RegisterEvent("ADDON_LOADED")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
-        if quality >= 4 then
+        if quality >= TinyLootMonitorDB.rarity then
             fL[#fL+1] = pool:Acquire()
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
-            fL[#fL]:HookScript("OnMouseUp", function(self, button)
+            fL[#fL]:SetScript("OnMouseUp", function(self, button)
                 if button == "LeftButton" and IsShiftKeyDown() then
                     SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
+                elseif button == "LeftButton" and IsControlKeyDown() then
+                    SendChatMessage("Roll for " .. link, "INSTANCE_CHAT")
+                elseif button == "RightButton" then
+                    pool:Release(fL[#fL])
+                    SortStack(pool, fL, anchor)
                 end
             end)
             SetToastTooltip(fL[#fL], itemID)
