@@ -1,5 +1,7 @@
 ## Interface: 90005
 ## Title: TinyLootMonitor
-## Notes: A Small loot monitor.
+## Notes: A simple yet efficient loot monitor.
+## Author: Beviselynt
+## SavedVariables: TinyLootMonitorDB
 
 TinyLootMonitor.lua

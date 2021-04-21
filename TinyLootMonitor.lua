@@ -1,5 +1,22 @@
+local defaults = {
+    __index = {
+        rarity = 2,
+    }
+}
+
+local rarity = {
+    poor = 0,
+    common = 1,
+    uncommon = 2,
+    rare = 3,
+    epic = 4,
+    legendary = 5,
+    artifact = 6,
+}
+
 local fL = {}
 local nLoot = 1
+local addonName = "|c002FC5D0TLM:|r"
 
 local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
@@ -9,7 +26,15 @@ local backdrop = {
 	tileSize = 16,
 	edgeSize = 16,
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
-};
+}
+
+local function GetKey(tab, value)
+    for k,v in pairs(tab) do
+        if v == value then
+            return k
+        end
+    end
+end
 
 local function LootInfo(...)
     local info = {...}
@@ -41,6 +66,28 @@ local function SortStack(fPool, fList, fAnchor)
         for i = 2, #fList do
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
+    end
+end
+
+local function SlashHandler(text)
+    local command, value = text:match("^(%S*)%s*(.-)$")
+    if command == "rarity" then
+        value = rarity[strlower(value)] or tonumber(value)
+        if value then
+            TinyLootMonitorDB.rarity = value
+            print(format("%s rarity set to %s.", addonName, GetKey(rarity, value)))
+        else
+            print(format("%s invalid rarity.", addonName))
+        end
+    elseif command == "anchor" then
+        if TinyLootMonitorAnchor:IsShown() then
+            TinyLootMonitorAnchor:Hide()
+        else
+            TinyLootMonitorAnchor:Show()
+        end
+    else
+        print(format("%s commands:", addonName))
+        print(format(" |c0000FF00- rarity:|r sets the minimum (and above) rarity TLM should monitor."))
     end
 end
 
@@ -90,8 +137,8 @@ anchor:SetScript("OnMouseUp", function(self) self:StopMovingOrSizing() end)
 anchor.bg = anchor:CreateTexture(nil, "BACKGROUND")
 anchor.bg:SetAllPoints()
 anchor.bg:SetColorTexture(0,1,0,0.2)
-anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormalOutline")
-anchor.text:SetText("Anchor")
+anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+anchor.text:SetText("TinyLootMonitor Anchor")
 anchor.text:SetPoint("CENTER")
 anchor:Hide()
 
@@ -122,29 +169,35 @@ end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
---[[fL[1] = pool:Acquire()
-SortStack(pool, fL, anchor)
-fL[1]:Show()
-fL[1].icon:SetTexture(132089)]]
-
 local m = CreateFrame("Frame")
 m:RegisterEvent("CHAT_MSG_LOOT")
+m:RegisterEvent("ADDON_LOADED")
 m:SetScript("OnEvent", function(self, event, ...)
-    local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
-    if quality >= 0 then
-        fL[#fL+1] = pool:Acquire()
-        fL[#fL].icon:SetTexture(icon)
-        fL[#fL].name:SetText(cPlayer)
-        fL[#fL].item:SetText(link)
-        fL[#fL]:HookScript("OnMouseUp", function(self, button)
-            if button == "LeftButton" and IsShiftKeyDown() then
-                SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
-            end
-        end)
-        SetToastTooltip(fL[#fL], itemID)
-        fL[#fL]:Show()
-        fL[#fL].sec = nLoot
-        nLoot = nLoot + 1
-        SortStack(pool, fL, anchor)
+    if event == "CHAT_MSG_LOOT" then
+        local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
+        if quality >= 4 then
+            fL[#fL+1] = pool:Acquire()
+            fL[#fL].icon:SetTexture(icon)
+            fL[#fL].name:SetText(cPlayer)
+            fL[#fL].item:SetText(link)
+            fL[#fL]:HookScript("OnMouseUp", function(self, button)
+                if button == "LeftButton" and IsShiftKeyDown() then
+                    SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
+                end
+            end)
+            SetToastTooltip(fL[#fL], itemID)
+            fL[#fL]:Show()
+            fL[#fL].sec = nLoot
+            nLoot = nLoot + 1
+            SortStack(pool, fL, anchor)
+            PlaySoundFile(567456)
+        end
+    elseif event == "ADDON_LOADED" then
+        TinyLootMonitorDB = TinyLootMonitorDB or {}
+        setmetatable(TinyLootMonitorDB, defaults)
     end
 end)
+
+-- Slash commands
+SLASH_TINYLOOTMONITOR1, SLASH_TINYLOOTMONITOR2 = "/tinylootmonitor", "/tlm"
+SlashCmdList["TINYLOOTMONITOR"] = SlashHandler
