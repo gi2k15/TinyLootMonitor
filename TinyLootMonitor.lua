@@ -214,10 +214,19 @@ local function SlashHandler(text)
             TinyLootMonitorDB.numMax = 4
             print(format("%s invalid argument. Setting to 4.", addonName))
         end
+    elseif command == "delay" then
+        value = tonumber(value)
+        if value and value >= 0 then
+            TinyLootMonitorDB.delay = value
+            ReloadUI() -- change it later for a better solution
+        else
+            print(format("%s invalid time.", addonName))
+        end
     else
         print(format("%s commands:", addonName))
-        print(" |c0000FF00- rarity <0-6|rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
+        print(" |c0000FF00- rarity <0-6||rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
         print(" |c0000FF00- max <number>:|r sets the maximum number of items to appear.")
+        print(" |c0000FF00- delay <number>:|r sets the time (in seconds) the items will stay on screen. You interface will be reloaded.")
         print(" |c0000FF00- anchor:|r shows the anchor.")
     end
 end
