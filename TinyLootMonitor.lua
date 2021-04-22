@@ -161,8 +161,15 @@ end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
-
-local m = CreateFrame("Frame")
+-- Monitor
+local m = CreateFrame("ScrollFrame")
+m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
+m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
+m:SetHeight(50 * 2 + 10)
+m:Show()
+local mf = CreateFrame("Frame")
+m:SetScrollChild(mf)
+mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:RegisterEvent("ADDON_LOADED")
 m:SetScript("OnEvent", function(self, event, ...)
@@ -170,6 +177,8 @@ m:SetScript("OnEvent", function(self, event, ...)
         local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
         if quality >= TinyLootMonitorDB.rarity then
             fL[#fL+1] = pool:Acquire()
+            mf:SetHeight(mf:GetHeight() + 55)
+            fL[#fL]:SetParent(mf)
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
@@ -189,6 +198,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                 elseif button == "LeftButton" and IsControlKeyDown() then
                     SendChatMessage("Roll for " .. link, "INSTANCE_CHAT")
                 elseif button == "RightButton" then
+                    mf:SetHeight(mf:GetHeight() - 55)
                     pool:Release(self)
                     SortStack(pool, fL, anchor)
                 end
