@@ -5,6 +5,7 @@
 local defaults = {
     __index = {
         rarity = 2,
+        numMax = 4,
     }
 }
 
@@ -68,28 +69,6 @@ local function SortStack(fPool, fList, fAnchor)
         for i = 2, #fList do
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
-    end
-end
-
-local function SlashHandler(text)
-    local command, value = text:match("^(%S*)%s*(.-)$")
-    if command == "rarity" then
-        value = rarity[strlower(value)] or tonumber(value)
-        if value then
-            TinyLootMonitorDB.rarity = value
-            print(format("%s rarity set to %s.", addonName, GetKey(rarity, value)))
-        else
-            print(format("%s invalid rarity.", addonName))
-        end
-    elseif command == "anchor" then
-        if TinyLootMonitorAnchor:IsShown() then
-            TinyLootMonitorAnchor:Hide()
-        else
-            TinyLootMonitorAnchor:Show()
-        end
-    else
-        print(format("%s commands:", addonName))
-        print(format(" |c0000FF00- rarity:|r sets the minimum (and above) rarity TLM should monitor."))
     end
 end
 
@@ -162,12 +141,11 @@ end
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
 -- Monitor
-local m = CreateFrame("ScrollFrame")
+local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame")
 m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
 m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
-m:SetHeight(50 * 2 + 10)
 m:Show()
-local mf = CreateFrame("Frame")
+local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
 m:SetScrollChild(mf)
 mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
@@ -209,9 +187,34 @@ m:SetScript("OnEvent", function(self, event, ...)
     elseif event == "ADDON_LOADED" then
         TinyLootMonitorDB = TinyLootMonitorDB or {}
         setmetatable(TinyLootMonitorDB, defaults)
+        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10)
     end
 end)
 
 -- Slash commands
+local function SlashHandler(text)
+    local command, value = text:match("^(%S*)%s*(.-)$")
+    if command == "rarity" then
+        value = rarity[strlower(value)] or tonumber(value)
+        if value then
+            TinyLootMonitorDB.rarity = value
+            print(format("%s rarity set to %s.", addonName, GetKey(rarity, value)))
+        else
+            print(format("%s invalid rarity.", addonName))
+        end
+    elseif command == "anchor" then
+        if TinyLootMonitorAnchor:IsShown() then
+            TinyLootMonitorAnchor:Hide()
+        else
+            TinyLootMonitorAnchor:Show()
+        end
+    elseif command == "max" then
+        TinyLootMonitorDB.numMax = tonumber(value)
+        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10)
+    else
+        print(format("%s commands:", addonName))
+        print(format(" |c0000FF00- rarity:|r sets the minimum (and above) rarity TLM should monitor."))
+    end
+end
 SLASH_TINYLOOTMONITOR1, SLASH_TINYLOOTMONITOR2 = "/tinylootmonitor", "/tlm"
 SlashCmdList["TINYLOOTMONITOR"] = SlashHandler
