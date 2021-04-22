@@ -209,11 +209,20 @@ local function SlashHandler(text)
             TinyLootMonitorAnchor:Show()
         end
     elseif command == "max" then
-        TinyLootMonitorDB.numMax = tonumber(value)
-        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10)
+        value = tonumber(value)
+        if value then
+            m:SetHeight(50 * value + 10)
+            TinyLootMonitorDB.numMax = value
+            print(format("%s %s items will appear.", addonName, value))
+        else
+            TinyLootMonitorDB.numMax = 4
+            print(format("%s invalid argument. Setting to 4.", addonName))
+        end
     else
         print(format("%s commands:", addonName))
-        print(format(" |c0000FF00- rarity:|r sets the minimum (and above) rarity TLM should monitor."))
+        print(" |c0000FF00- rarity <number|quality>:|r sets the minimum (and above) rarity TLM should monitor.")
+        print(" |c0000FF00- max <number>:|r sets the maximum number of items to appear.")
+        print(" |c0000FF00- anchor:|r shows the anchor.")
     end
 end
 SLASH_TINYLOOTMONITOR1, SLASH_TINYLOOTMONITOR2 = "/tinylootmonitor", "/tlm"
