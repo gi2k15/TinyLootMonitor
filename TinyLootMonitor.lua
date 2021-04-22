@@ -51,8 +51,8 @@ local function LootInfo(...)
     local cPlayer = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
     local itemID = info[1]:match("item:(%d*)")
-    local quality = select(3, GetItemInfo(link))
-    return icon, player, cPlayer, link, itemID, quality
+    local rarity = select(3, GetItemInfo(link))
+    return icon, player, cPlayer, link, rarity
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -63,7 +63,7 @@ local function SortStack(fPool, fList, fAnchor)
         i = i + 1
     end
     if fList[1] == nil then return end
-    sort(fList, function(a,b) return a.sec < b.sec end)
+    sort(fList, function(a,b) return a.order < b.order end)
     fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
     if #fList > 1 then
         for i = 2, #fList do
@@ -120,7 +120,7 @@ local function FrameCreation(fPool)
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, 2)
     f.item:SetWidth(148)
     f.item:SetHeight(16)
-    f.sec = nLoot
+    f.order = nLoot
     nLoot = nLoot + 1
     return f
 end
@@ -143,10 +143,10 @@ m:RegisterEvent("CHAT_MSG_LOOT")
 m:RegisterEvent("ADDON_LOADED")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
-        local icon, player, cPlayer, link, itemID, quality = LootInfo(...)
-        if quality >= TinyLootMonitorDB.rarity then
+        local icon, player, cPlayer, link, rarity = LootInfo(...)
+        if rarity >= TinyLootMonitorDB.rarity then
             fL[#fL+1] = pool:Acquire()
-            mf:SetHeight(mf:GetHeight() + 55)
+            mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
             fL[#fL]:SetParent(mf)
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
@@ -182,7 +182,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     elseif event == "ADDON_LOADED" then
         TinyLootMonitorDB = TinyLootMonitorDB or {}
         setmetatable(TinyLootMonitorDB, defaults)
-        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10)
+        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10) -- Change '50' to toast's height.
     end
 end)
 
@@ -206,7 +206,7 @@ local function SlashHandler(text)
     elseif command == "max" then
         value = tonumber(value)
         if value then
-            m:SetHeight(50 * value + 10)
+            m:SetHeight(50 * value + 10) -- Change '50' to toast's height.
             TinyLootMonitorDB.numMax = value
             print(format("%s %s items will appear.", addonName, value))
         else
@@ -215,7 +215,7 @@ local function SlashHandler(text)
         end
     else
         print(format("%s commands:", addonName))
-        print(" |c0000FF00- rarity <number|quality>:|r sets the minimum (and above) rarity TLM should monitor.")
+        print(" |c0000FF00- rarity <number|rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
         print(" |c0000FF00- max <number>:|r sets the maximum number of items to appear.")
         print(" |c0000FF00- anchor:|r shows the anchor.")
     end
