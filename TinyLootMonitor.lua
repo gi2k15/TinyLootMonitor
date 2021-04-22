@@ -1,3 +1,7 @@
+-- "Ding" sound made by Aiwha. 
+-- https://freesound.org/people/Aiwha/sounds/196106/
+-- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+
 local defaults = {
     __index = {
         rarity = 2,
@@ -89,17 +93,6 @@ local function SlashHandler(text)
     end
 end
 
-local function SetToastTooltip(frame, item)
-    frame:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, 50)
-        GameTooltip:SetItemByID(item)
-        GameTooltip:Show()
-    end)
-    frame:SetScript("OnLeave", function(self)
-        GameTooltip:Hide()
-    end)
-end
-
 --[[local function AnimateFrame(frame, outOnly)
     local groupFI = frame:CreateAnimationGroup()
     local fadeIn = groupFI:CreateAnimation("Alpha")
@@ -157,16 +150,17 @@ local function FrameCreation(fPool)
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, 2)
     f.item:SetWidth(148)
     f.item:SetHeight(16)
+    f.sec = nLoot
+    nLoot = nLoot + 1
     return f
 end
 
 local function FrameResetter(fPool, frame)
     frame:Hide()
-    frame.sec = nLoot
-    nLoot = nLoot + 1
 end
 
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
+
 
 local m = CreateFrame("Frame")
 m:RegisterEvent("CHAT_MSG_LOOT")
@@ -179,20 +173,28 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
+            SortStack(pool, fL, anchor)
+            fL[#fL]:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_NONE")
+                GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
+                GameTooltip:SetHyperlink(link)
+                GameTooltip:Show()
+            end)
+            fL[#fL]:SetScript("OnLeave", function(self)
+                GameTooltip:Hide()
+            end)
             fL[#fL]:SetScript("OnMouseUp", function(self, button)
                 if button == "LeftButton" and IsShiftKeyDown() then
                     SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                 elseif button == "LeftButton" and IsControlKeyDown() then
                     SendChatMessage("Roll for " .. link, "INSTANCE_CHAT")
                 elseif button == "RightButton" then
-                    pool:Release(fL[#fL])
+                    pool:Release(self)
                     SortStack(pool, fL, anchor)
                 end
             end)
-            SetToastTooltip(fL[#fL], itemID)
+            PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
             fL[#fL]:Show()
-            SortStack(pool, fL, anchor)
-            PlaySoundFile(567456)
         end
     elseif event == "ADDON_LOADED" then
         TinyLootMonitorDB = TinyLootMonitorDB or {}
