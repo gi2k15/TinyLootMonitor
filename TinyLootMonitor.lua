@@ -6,6 +6,7 @@ local defaults = {
     __index = {
         rarity = 2,
         numMax = 4,
+        delay = 5,
     }
 }
 
@@ -72,14 +73,14 @@ local function SortStack(fPool, fList, fAnchor)
     end
 end
 
-local function AnimateFrame(sChild, fPool, fList, fAnchor)
+local function AnimateFrame(sChild, fPool, fList, fAnchor, delay)
     local group = fList[#fList]:CreateAnimationGroup()
     local fadeOut = group:CreateAnimation("Alpha")
     fadeOut:SetFromAlpha(1)
     fadeOut:SetToAlpha(0)
-    fadeOut:SetDuration(1.5)
+    fadeOut:SetDuration(1)
     fadeOut:SetSmoothing("IN")
-    fadeOut:SetStartDelay(2)
+    fadeOut:SetStartDelay(delay)
     group:SetScript("OnFinished", function()
         sChild:SetHeight(sChild:GetHeight() - 55)
         fPool:Release(fList[#fList])
@@ -152,8 +153,8 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
             SortStack(pool, fL, anchor)
-            local anim = AnimateFrame(mf, pool, fL, anchor)
-            anim:Play()
+            local anim = AnimateFrame(mf, pool, fL, anchor, TinyLootMonitorDB.delay)
+            if TinyLootMonitorDB.delay > 0 then anim:Play() end
             fL[#fL]:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_NONE")
                 GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
@@ -163,7 +164,7 @@ m:SetScript("OnEvent", function(self, event, ...)
             end)
             fL[#fL]:SetScript("OnLeave", function(self)
                 GameTooltip:Hide()
-                anim:Play()
+                if TinyLootMonitorDB.delay > 0 then anim:Play() end
             end)
             fL[#fL]:SetScript("OnMouseUp", function(self, button)
                 if button == "LeftButton" and IsShiftKeyDown() then
@@ -215,7 +216,7 @@ local function SlashHandler(text)
         end
     else
         print(format("%s commands:", addonName))
-        print(" |c0000FF00- rarity <number|rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
+        print(" |c0000FF00- rarity <0-6|rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
         print(" |c0000FF00- max <number>:|r sets the maximum number of items to appear.")
         print(" |c0000FF00- anchor:|r shows the anchor.")
     end
