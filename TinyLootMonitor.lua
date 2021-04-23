@@ -51,7 +51,6 @@ local function LootInfo(...)
     local classColor = C_ClassColor.GetClassColor(class)
     local cPlayer = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
-    local itemID = info[1]:match("item:(%d*)")
     local rarity = select(3, GetItemInfo(link))
     return icon, player, cPlayer, link, rarity
 end
@@ -90,6 +89,7 @@ local function AnimateFrame(sChild, fPool, fList, fAnchor, delay)
 end
 
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor")
+anchor:SetFrameStrata("DIALOG")
 anchor:SetPoint("CENTER")
 anchor:SetSize(200,20)
 anchor:EnableMouse(true)
@@ -121,8 +121,6 @@ local function FrameCreation(fPool)
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, 2)
     f.item:SetWidth(148)
     f.item:SetHeight(16)
-    f.order = nLoot
-    nLoot = nLoot + 1
     return f
 end
 
@@ -134,6 +132,7 @@ local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
 -- Monitor
 local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame")
+m:SetFrameStrata("DIALOG")
 m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
 m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
 m:Show()
@@ -152,6 +151,8 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
+            fL[#fL].order = nLoot
+            nLoot = nLoot + 1
             SortStack(pool, fL, anchor)
             local anim = AnimateFrame(mf, pool, fL, anchor, TinyLootMonitorDB.delay)
             if TinyLootMonitorDB.delay > 0 then anim:Play() end
