@@ -184,7 +184,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     elseif event == "ADDON_LOADED" then
         TinyLootMonitorDB = TinyLootMonitorDB or {}
         setmetatable(TinyLootMonitorDB, defaults)
-        m:SetHeight(50 * TinyLootMonitorDB.numMax + 10) -- Change '50' to toast's height.
+        m:SetHeight(50 * (TinyLootMonitorDB.numMax + 10)) -- Change '50' to toast's height.
     end
 end)
 
