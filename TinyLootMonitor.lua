@@ -5,7 +5,7 @@
 local defaults = {
     __index = {
         rarity = 2,
-        numMax = 4,
+        numMax = 5,
         delay = 5,
     }
 }
@@ -33,6 +33,7 @@ local backdrop = {
 local fL = {}
 local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
+local db
 
 local function GetKey(tab, value)
     for k,v in pairs(tab) do
@@ -140,11 +141,12 @@ local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
 m:SetScrollChild(mf)
 mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
-m:RegisterEvent("ADDON_LOADED")
+m:RegisterEvent("PLAYER_LOGIN")
+m.RegisterEvent("PLAYER_LOGOUT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, cPlayer, link, rarity = LootInfo(...)
-        if rarity >= TinyLootMonitorDB.rarity then
+        if rarity >= db.rarity then
             fL[#fL+1] = pool:Acquire()
             mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
             fL[#fL]:SetParent(mf)
@@ -154,8 +156,8 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL].order = nLoot
             nLoot = nLoot + 1
             SortStack(pool, fL, anchor)
-            local anim = AnimateFrame(mf, pool, fL, anchor, TinyLootMonitorDB.delay)
-            if TinyLootMonitorDB.delay > 0 then anim:Play() end
+            local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
+            if db.delay > 0 then anim:Play() end
             fL[#fL]:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_NONE")
                 GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
@@ -165,7 +167,7 @@ m:SetScript("OnEvent", function(self, event, ...)
             end)
             fL[#fL]:SetScript("OnLeave", function(self)
                 GameTooltip:Hide()
-                if TinyLootMonitorDB.delay > 0 then anim:Play() end
+                if db.delay > 0 then anim:Play() end
             end)
             fL[#fL]:SetScript("OnMouseUp", function(self, button)
                 if button == "LeftButton" and IsShiftKeyDown() then
@@ -181,10 +183,12 @@ m:SetScript("OnEvent", function(self, event, ...)
             PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
             fL[#fL]:Show()
         end
-    elseif event == "ADDON_LOADED" then
-        TinyLootMonitorDB = TinyLootMonitorDB or {}
-        setmetatable(TinyLootMonitorDB, defaults)
-        m:SetHeight(50 * (TinyLootMonitorDB.numMax + 10)) -- Change '50' to toast's height.
+    elseif event == "PLAYER_LOGIN" then
+        db = TinyLootMonitorDB or {}
+        setmetatable(db, defaults)
+        m:SetHeight(50 * (db.numMax + 10)) -- Change '50' to toast's height.
+    elseif event == "PLAYER_LOGOUT" then
+        TinyLootMonitorDB = db
     end
 end)
 
@@ -194,7 +198,7 @@ local function SlashHandler(text)
     if command == "rarity" then
         value = rarity[strlower(value)] or tonumber(value)
         if value then
-            TinyLootMonitorDB.rarity = value
+            db.rarity = value
             print(format("%s rarity set to %s.", addonName, GetKey(rarity, value)))
         else
             print(format("%s invalid rarity.", addonName))
@@ -209,19 +213,19 @@ local function SlashHandler(text)
         value = tonumber(value)
         if value then
             m:SetHeight(50 * value + 10) -- Change '50' to toast's height.
-            TinyLootMonitorDB.numMax = value
+            db.numMax = value
             print(format("%s %s items will appear.", addonName, value))
         else
-            TinyLootMonitorDB.numMax = 4
+            db.numMax = 4
             print(format("%s invalid argument. Setting to 4.", addonName))
         end
     elseif command == "delay" then
         value = tonumber(value)
         if value and value >= 0 then
-            TinyLootMonitorDB.delay = value
+            db.delay = value
             ReloadUI() -- change it later for a better solution
         else
-            print(format("%s invalid time.", addonName))
+            print(format("%s delay is currently set to %s", addonName, db.value))
         end
     else
         print(format("%s commands:", addonName))
