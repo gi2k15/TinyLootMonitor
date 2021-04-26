@@ -170,12 +170,12 @@ m:SetScript("OnEvent", function(self, event, ...)
                 if db.delay > 0 then anim:Play() end
             end)
             fL[#fL]:SetScript("OnMouseUp", function(self, button)
-                if button == "LeftButton" and IsShiftKeyDown() then
+                if button == "RightButton" and IsShiftKeyDown() then
                     SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                 elseif button == "LeftButton" and IsControlKeyDown() then
-                    SendChatMessage("Roll for " .. link, "INSTANCE_CHAT")
+                    DressUpLink(link)
                 elseif button == "RightButton" then
-                    mf:SetHeight(mf:GetHeight() - 55)
+                    mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                     pool:Release(self)
                     SortStack(pool, fL, anchor)
                 end
@@ -186,7 +186,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     elseif event == "PLAYER_LOGIN" then
         db = TinyLootMonitorDB or {}
         setmetatable(db, defaults)
-        m:SetHeight(50 * (db.numMax + 10)) -- Change '50' to toast's height.
+        m:SetHeight((50 + 5) * db.numMax) -- Change '50' to toast's height.
     elseif event == "PLAYER_LOGOUT" then
         TinyLootMonitorDB = db
     end
@@ -212,7 +212,7 @@ local function SlashHandler(text)
     elseif command == "max" then
         value = tonumber(value)
         if value then
-            m:SetHeight(50 * value + 10) -- Change '50' to toast's height.
+            m:SetHeight((50 + 10) * value) -- Change '50' to toast's height.
             db.numMax = value
             print(format("%s %s items will appear.", addonName, value))
         else
