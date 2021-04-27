@@ -142,7 +142,7 @@ m:SetScrollChild(mf)
 mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:RegisterEvent("PLAYER_LOGIN")
-m.RegisterEvent("PLAYER_LOGOUT")
+m:RegisterEvent("PLAYER_LOGOUT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, cPlayer, link, rarity = LootInfo(...)
@@ -172,12 +172,14 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL]:SetScript("OnMouseUp", function(self, button)
                 if button == "RightButton" and IsShiftKeyDown() then
                     SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
-                elseif button == "LeftButton" and IsControlKeyDown() then
-                    DressUpLink(link)
                 elseif button == "RightButton" then
                     mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                     pool:Release(self)
                     SortStack(pool, fL, anchor)
+                elseif button == "LeftButton" and IsControlKeyDown() then
+                    DressUpLink(link)
+                elseif button == "LeftButton" and IsShiftKeyDown() then
+                    ChatEdit_InsertLink(link)
                 end
             end)
             PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
