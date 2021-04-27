@@ -92,8 +92,8 @@ end
 
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor")
 anchor:SetFrameStrata("DIALOG")
-anchor:SetPoint("CENTER")
 anchor:SetSize(200,20)
+anchor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -224, -132)
 anchor:EnableMouse(true)
 anchor:SetMovable(true)
 anchor:SetScript("OnMouseDown", function(self) self:StartMoving() end)
