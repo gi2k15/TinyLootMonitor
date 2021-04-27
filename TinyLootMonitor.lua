@@ -53,7 +53,8 @@ local function LootInfo(...)
     local cPlayer = classColor:WrapTextInColorCode(player)
     local icon = select(10, GetItemInfo(link))
     local rarity = select(3, GetItemInfo(link))
-    return icon, player, cPlayer, link, rarity
+    local quantity = info[1]:match("x(%d*)\.$")
+    return icon, player, cPlayer, link, rarity, quantity
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -122,6 +123,12 @@ local function FrameCreation(fPool)
     f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, 2)
     f.item:SetWidth(148)
     f.item:SetHeight(16)
+    f.quantity = f:CreateFontString(nil, "ARTWORK", "GameFontNormalOutline")
+    f.quantity:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    f.quantity:SetTextColor(1,1,0)
+    f.quantity:SetJustifyH("RIGHT")
+    f.quantity:SetPoint("BOTTOMRIGHT", f.icon, "BOTTOMRIGHT", -2, 2)
+    f.quantity:SetText("123")
     return f
 end
 
@@ -145,7 +152,7 @@ m:RegisterEvent("PLAYER_LOGIN")
 m:RegisterEvent("PLAYER_LOGOUT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
-        local icon, player, cPlayer, link, rarity = LootInfo(...)
+        local icon, player, cPlayer, link, rarity, quantity = LootInfo(...)
         if rarity >= db.rarity then
             fL[#fL+1] = pool:Acquire()
             mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
@@ -153,6 +160,7 @@ m:SetScript("OnEvent", function(self, event, ...)
             fL[#fL].icon:SetTexture(icon)
             fL[#fL].name:SetText(cPlayer)
             fL[#fL].item:SetText(link)
+            fL[#fL].quantity:SetText(quantity)
             fL[#fL].order = nLoot
             nLoot = nLoot + 1
             SortStack(pool, fL, anchor)
