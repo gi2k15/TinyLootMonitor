@@ -2,6 +2,6 @@
 ## Title: TinyLootMonitor
 ## Notes: A simple yet efficient loot monitor.
 ## Author: Beviselynt
-## SavedVariables: TinyLootMonitorDB
+## SavedVariablesPerCharacter: TinyLootMonitorDB
 
 TinyLootMonitor.lua
