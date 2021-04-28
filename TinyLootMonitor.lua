@@ -25,8 +25,8 @@ local backdrop = {
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
 	tile = true,
 	tileEdge = true,
-	tileSize = 16,
-	edgeSize = 16,
+	tileSize = 24,
+	edgeSize = 24,
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
 
@@ -47,7 +47,7 @@ local function LootInfo(...)
     local info = {...}
     local link = info[1]:match("(|c.+|r)")
     local guid = info[12]
-    local player = select(6, GetPlayerInfoByGUID(guid))
+    local player = info[2]
     local class = select(2, GetPlayerInfoByGUID(guid))
     local classColor = C_ClassColor.GetClassColor(class)
     local cPlayer = classColor:WrapTextInColorCode(player)
@@ -80,7 +80,7 @@ local function AnimateFrame(sChild, fPool, fList, fAnchor, delay)
     fadeOut:SetFromAlpha(1)
     fadeOut:SetToAlpha(0)
     fadeOut:SetDuration(1)
-    fadeOut:SetSmoothing("IN")
+    fadeOut:SetSmoothing("OUT")
     fadeOut:SetStartDelay(delay)
     group:SetScript("OnFinished", function()
         sChild:SetHeight(sChild:GetHeight() - 55)
@@ -90,9 +90,8 @@ local function AnimateFrame(sChild, fPool, fList, fAnchor, delay)
     return group
 end
 
-local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor")
-anchor:SetFrameStrata("DIALOG")
-anchor:SetSize(200,20)
+local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor", UIParent)
+anchor:SetSize(250,20)
 anchor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -224, -132)
 anchor:EnableMouse(true)
 anchor:SetMovable(true)
@@ -109,26 +108,24 @@ anchor:Hide()
 local function FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
     f:SetBackdrop(backdrop)
-    f:SetPoint("CENTER")
-    f:SetSize(200,50)
+    f:SetSize(250,60)
+    f:SetFrameStrata("HIGH")
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetSize(30,30)
+    f.icon:SetSize(40,40)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
-    f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
-    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0)
-    f.name:SetWidth(148)
+    f.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 5, 0, -2)
+    f.name:SetWidth(185)
     f.name:SetHeight(16)
-    f.name:SetNonSpaceWrap(false)
-    f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalSmallLeft")
-    f.item:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, 2)
-    f.item:SetWidth(148)
+    f.item = f:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
+    f.item:SetPoint("BOTTOMLEFT", f.icon, "BOTTOMRIGHT", 5, 2)
+    f.item:SetWidth(185)
     f.item:SetHeight(16)
     f.quantity = f:CreateFontString(nil, "ARTWORK", "GameFontNormalOutline")
-    f.quantity:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     f.quantity:SetTextColor(1,1,0)
     f.quantity:SetJustifyH("RIGHT")
     f.quantity:SetPoint("BOTTOMRIGHT", f.icon, "BOTTOMRIGHT", -2, 2)
-    f.quantity:SetText("123")
     return f
 end
 
@@ -139,8 +136,8 @@ end
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
 -- Monitor
-local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame")
-m:SetFrameStrata("DIALOG")
+local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame", UIParent)
+m:SetFrameStrata("HIGH")
 m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
 m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
 m:Show()
@@ -170,6 +167,11 @@ m:SetScript("OnEvent", function(self, event, ...)
                 GameTooltip:SetOwner(self, "ANCHOR_NONE")
                 GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                 GameTooltip:SetHyperlink(link)
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddDoubleLine("Right click", "Dismiss", 0,1,0)
+                GameTooltip:AddDoubleLine("Shift+Right click", "Whisper player", 0,1,0)
+                GameTooltip:AddDoubleLine("Ctrl+Left click", "Dress item", 0,1,0)
+                GameTooltip:AddDoubleLine("Shift+Left click", "Link item", 0,1,0)
                 GameTooltip:Show()
                 anim:Stop()
             end)
@@ -196,7 +198,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     elseif event == "PLAYER_LOGIN" then
         db = TinyLootMonitorDB or {}
         setmetatable(db, defaults)
-        m:SetHeight((50 + 5) * db.numMax) -- Change '50' to toast's height.
+        m:SetHeight((60 + 5) * db.numMax) -- Change '60' to toast's height.
     elseif event == "PLAYER_LOGOUT" then
         TinyLootMonitorDB = db
     end
@@ -222,7 +224,7 @@ local function SlashHandler(text)
     elseif command == "max" then
         value = tonumber(value)
         if value then
-            m:SetHeight((50 + 10) * value) -- Change '50' to toast's height.
+            m:SetHeight((60 + 10) * value) -- Change '60' to toast's height.
             db.numMax = value
             print(format("%s %s items will appear.", addonName, value))
         else
