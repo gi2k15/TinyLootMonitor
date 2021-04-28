@@ -25,8 +25,8 @@ local backdrop = {
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
 	tile = true,
 	tileEdge = true,
-	tileSize = 24,
-	edgeSize = 24,
+	tileSize = 20,
+	edgeSize = 20,
 	insets = { left = 4, right = 4, top = 4, bottom = 4 },
 }
 
@@ -224,7 +224,7 @@ local function SlashHandler(text)
     elseif command == "max" then
         value = tonumber(value)
         if value then
-            m:SetHeight((60 + 10) * value) -- Change '60' to toast's height.
+            m:SetHeight((60 + 5) * value) -- Change '60' to toast's height.
             db.numMax = value
             print(format("%s %s items will appear.", addonName, value))
         else
