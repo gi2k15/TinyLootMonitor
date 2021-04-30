@@ -2,23 +2,89 @@
 -- https://freesound.org/people/Aiwha/sounds/196106/
 -- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
+TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor")
+local a = TinyLootMonitor
+
 local defaults = {
-    __index = {
-        rarity = 2,
+    profile = {
+        rarity = 3,
         numMax = 5,
         delay = 5,
-    }
+    },
 }
 
-local rarity = {
-    poor = 0,
-    common = 1,
-    uncommon = 2,
-    rare = 3,
-    epic = 4,
-    legendary = 5,
-    artifact = 6,
+local options = {
+    type = "group",
+    args = {
+        rarity = {
+            name = "Rarity",
+            desc = "Sets the minimum rarity TinyLootMonitor will track.",
+            type = "select",
+            values = { 
+                [0] = "Poor", 
+                [1] = "Common", 
+                [2] = "Uncommon", 
+                [3] = "Rare", 
+                [4] = "Epic",
+                [5] = "Legendary",
+                [6] = "Artifact" 
+            },
+            style = "dropdown",
+            get = function(info) return a.db.rarity end,
+            set = function(info, val) a.db.rarity = val end,
+            order = 10,
+        },
+        numMax = {
+            name = "Maximum",
+            desc = "Sets the maximum number of toasts that will appear on screen.",
+            type = "range",
+            min = 1,
+            max = 10,
+            step = 1,
+            softMin = 1,
+            softMax = 10,
+            get = function(info) return a.db.profile.numMax end,
+            set = function(info, value) a.db.profile.numMax = value end,
+            order = 20,
+        },
+        delay = {
+            name = "Delay",
+            desc = "Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts.",
+            type = "range",
+            min = 0,
+            max = 60,
+            softMin = 0,
+            softMax = 60,
+            step = 1,
+            get = function(info) return a.db.delay end,
+            set = function(info,value) a.db.delay = value end,
+            order = 30,
+        },
+        anchor = {
+            name = "Show/Hide anchor",
+            type = "execute",
+            func = function()
+                if TinyLootMonitorAnchor:IsShown() then
+                    TinyLootMonitorAnchor:Hide()
+                else
+                    TinyLootMonitorAnchor:Show()
+                end
+            end,
+            order = 40,            
+        },
+    },
 }
+
+local db
+function a:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
+    --profiles.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+    local bliz = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
+    --InterfaceOptionsFrame_OpenToCategory(bliz)
+    db = a.db.profile
+    DevTools_Dump(db)
+end
 
 local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
@@ -33,7 +99,6 @@ local backdrop = {
 local fL = {}
 local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
-local db
 
 local function GetKey(tab, value)
     for k,v in pairs(tab) do
@@ -193,14 +258,9 @@ m:SetScript("OnEvent", function(self, event, ...)
                 end
             end)
             PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
+            DevTools_Dump(pool)
             fL[#fL]:Show()
         end
-    elseif event == "PLAYER_LOGIN" then
-        db = TinyLootMonitorDB or {}
-        setmetatable(db, defaults)
-        m:SetHeight((60 + 5) * db.numMax) -- Change '60' to toast's height.
-    elseif event == "PLAYER_LOGOUT" then
-        TinyLootMonitorDB = db
     end
 end)
 
