@@ -5,6 +5,8 @@
 TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor")
 local a = TinyLootMonitor
 
+local iColors = ITEM_QUALITY_COLORS
+
 local defaults = {
     profile = {
         rarity = 3,
@@ -21,13 +23,13 @@ local options = {
             desc = "Sets the minimum rarity TinyLootMonitor will track.",
             type = "select",
             values = { 
-                [0] = "Poor", 
-                [1] = "Common", 
-                [2] = "Uncommon", 
-                [3] = "Rare", 
-                [4] = "Epic",
-                [5] = "Legendary",
-                [6] = "Artifact" 
+                [0] = iColors[0].hex .. "Poor", 
+                [1] = iColors[1].hex .. "Common", 
+                [2] = iColors[2].hex .. "Uncommon", 
+                [3] = iColors[3].hex .. "Rare", 
+                [4] = iColors[4].hex .. "Epic",
+                [5] = iColors[5].hex .. "Legendary",
+                [6] = iColors[6].hex .. "Artifact" 
             },
             style = "dropdown",
             get = function(info) return a.db.profile.rarity end,
@@ -78,12 +80,15 @@ local options = {
 local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options, { "tinylootmonitor", "tlm" })
     --profiles.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     local bliz = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
     --InterfaceOptionsFrame_OpenToCategory(bliz)
     db = a.db.profile
-    DevTools_Dump(db)
+end
+
+function a:OnEnabled()
+    m:SetHeight((60 + 5) * db.numMax) -- Change '60' to toast's height.
 end
 
 local backdrop = {
@@ -264,6 +269,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 
+--[[
 -- Slash commands
 local function SlashHandler(text)
     local command, value = text:match("^(%S*)%s*(.-)$")
@@ -308,4 +314,4 @@ local function SlashHandler(text)
     end
 end
 SLASH_TINYLOOTMONITOR1, SLASH_TINYLOOTMONITOR2 = "/tinylootmonitor", "/tlm"
-SlashCmdList["TINYLOOTMONITOR"] = SlashHandler
+SlashCmdList["TINYLOOTMONITOR"] = SlashHandler ]]
