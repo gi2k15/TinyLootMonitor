@@ -5,13 +5,18 @@
 TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor")
 local a = TinyLootMonitor
 
+local LSM = LibStub("LibSharedMedia-3.0")
+LSM:Register("sound", "Ding", "Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
+
 local iColors = ITEM_QUALITY_COLORS
+local toastHeight = 60
 
 local defaults = {
     profile = {
         rarity = 3,
         numMax = 5,
         delay = 5,
+        sound = "Ding",
     },
 }
 
@@ -54,12 +59,12 @@ local options = {
             desc = "Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts.",
             type = "range",
             min = 0,
-            max = 60,
+            max = toastHeight,
             softMin = 0,
-            softMax = 60,
+            softMax = toastHeight,
             step = 1,
-            get = function(info) return a.db.delay end,
-            set = function(info,value) a.db.delay = value end,
+            get = function(info) return a.db.profile.delay end,
+            set = function(info,value) a.db.profile.delay = value end,
             order = 30,
         },
         anchor = {
@@ -74,21 +79,31 @@ local options = {
             end,
             order = 40,            
         },
+        sound = {
+            name = "Sound",
+            desc = "The sound that plays when the toast appears.",
+            type = "select",
+            dialogControl = "LSM30_Sound",
+            values = LSM:HashTable("sound"),
+            get = function(info) return a.db.profile.sound end,
+            set = function(info,value) a.db.profile.sound = value end,
+            order = 35,
+        },
     },
 }
 
 local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options, { "tinylootmonitor", "tlm" })
-    --profiles.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
-    local bliz = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
-    --InterfaceOptionsFrame_OpenToCategory(bliz)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", "Profiles", "TinyLootMonitor")
     db = a.db.profile
 end
 
 function a:OnEnabled()
-    m:SetHeight((60 + 5) * db.numMax) -- Change '60' to toast's height.
+    m:SetHeight((toastHeight + 5) * db.numMax) 
 end
 
 local backdrop = {
@@ -170,7 +185,7 @@ anchor:SetScript("OnMouseUp", function(self) self:StopMovingOrSizing() end)
 anchor.bg = anchor:CreateTexture(nil, "BACKGROUND")
 anchor.bg:SetAllPoints()
 anchor.bg:SetColorTexture(0,1,0,0.2)
-anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 anchor.text:SetText("TinyLootMonitor Anchor")
 anchor.text:SetPoint("CENTER")
 anchor:Hide()
@@ -178,7 +193,7 @@ anchor:Hide()
 local function FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
     f:SetBackdrop(backdrop)
-    f:SetSize(250,60)
+    f:SetSize(250,toastHeight)
     f:SetFrameStrata("HIGH")
     f.icon = f:CreateTexture(nil, "ARTWORK")
     f.icon:SetSize(40,40)
@@ -216,8 +231,6 @@ local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
 m:SetScrollChild(mf)
 mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
---m:RegisterEvent("PLAYER_LOGIN")
---m:RegisterEvent("PLAYER_LOGOUT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, cPlayer, link, rarity, quantity = LootInfo(...)
@@ -263,55 +276,8 @@ m:SetScript("OnEvent", function(self, event, ...)
                     ChatEdit_InsertLink(link)
                 end
             end)
-            PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
+            PlaySoundFile(LSM:Fetch("sound", db.sound))
             fL[#fL]:Show()
         end
     end
 end)
-
---[[
--- Slash commands
-local function SlashHandler(text)
-    local command, value = text:match("^(%S*)%s*(.-)$")
-    if command == "rarity" then
-        value = rarity[strlower(value)] or tonumber(value)
-        if value then
-            db.rarity = value
-            print(format("%s rarity set to %s.", addonName, GetKey(rarity, value)))
-        else
-            print(format("%s invalid rarity.", addonName))
-        end
-    elseif command == "anchor" then
-        if TinyLootMonitorAnchor:IsShown() then
-            TinyLootMonitorAnchor:Hide()
-        else
-            TinyLootMonitorAnchor:Show()
-        end
-    elseif command == "max" then
-        value = tonumber(value)
-        if value then
-            m:SetHeight((60 + 5) * value) -- Change '60' to toast's height.
-            db.numMax = value
-            print(format("%s %s items will appear.", addonName, value))
-        else
-            db.numMax = 4
-            print(format("%s invalid argument. Setting to 4.", addonName))
-        end
-    elseif command == "delay" then
-        value = tonumber(value)
-        if value and value >= 0 then
-            db.delay = value
-            ReloadUI() -- change it later for a better solution
-        else
-            print(format("%s delay is currently set to %s", addonName, db.value))
-        end
-    else
-        print(format("%s commands:", addonName))
-        print(" |c0000FF00- rarity <0-6||rarity>:|r sets the minimum (and above) rarity TLM should monitor.")
-        print(" |c0000FF00- max <number>:|r sets the maximum number of items to appear.")
-        print(" |c0000FF00- delay <number>:|r sets the time (in seconds) the items will stay on screen. You interface will be reloaded.")
-        print(" |c0000FF00- anchor:|r shows the anchor.")
-    end
-end
-SLASH_TINYLOOTMONITOR1, SLASH_TINYLOOTMONITOR2 = "/tinylootmonitor", "/tlm"
-SlashCmdList["TINYLOOTMONITOR"] = SlashHandler ]]
