@@ -30,8 +30,8 @@ local options = {
                 [6] = "Artifact" 
             },
             style = "dropdown",
-            get = function(info) return a.db.rarity end,
-            set = function(info, val) a.db.rarity = val end,
+            get = function(info) return a.db.profile.rarity end,
+            set = function(info, val) a.db.profile.rarity = val end,
             order = 10,
         },
         numMax = {
@@ -205,13 +205,14 @@ local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame", UIParent)
 m:SetFrameStrata("HIGH")
 m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
 m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
+m:SetHeight(300)
 m:Show()
 local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
 m:SetScrollChild(mf)
 mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
-m:RegisterEvent("PLAYER_LOGIN")
-m:RegisterEvent("PLAYER_LOGOUT")
+--m:RegisterEvent("PLAYER_LOGIN")
+--m:RegisterEvent("PLAYER_LOGOUT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, cPlayer, link, rarity, quantity = LootInfo(...)
@@ -258,7 +259,6 @@ m:SetScript("OnEvent", function(self, event, ...)
                 end
             end)
             PlaySoundFile("Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
-            DevTools_Dump(pool)
             fL[#fL]:Show()
         end
     end
