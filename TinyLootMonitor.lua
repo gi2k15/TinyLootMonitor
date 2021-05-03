@@ -17,12 +17,19 @@ local defaults = {
         numMax = 5,
         delay = 5,
         sound = "Ding",
+        banlist = {},
     },
 }
 
 local options = {
     type = "group",
     args = {
+        description = {
+            type = "description",
+            name = "A loot monitor.",
+            fontSize = "medium",
+            order = 5,
+        },
         rarity = {
             name = "Rarity",
             desc = "Sets the minimum rarity TinyLootMonitor will track.",
@@ -89,6 +96,42 @@ local options = {
             set = function(info,value) a.db.profile.sound = value end,
             order = 35,
         },
+        banGroup = {
+            type = "group",
+            name = "Ban List",
+            guiInline = true,
+            args = {
+                banList = {
+                    name = "Items",
+                    desc = "List of items TLM won't show.",
+                    type = "multiselect",
+                    values = function()
+                        items = {}
+                        for k in pairs(a.db.profile.banlist) do
+                            local name = GetItemInfo(k)
+                            items[k] = name
+                        end
+                        return items
+                    end,
+                    get = function(info, key) return a.db.profile.banlist[key] end,
+                    set = function(info, key, value) a.db.profile.banlist[key] = value end,
+                    order = 50,
+                },
+                clear = {
+                    name = "Clear Unmarked",
+                    desc = "Will remove from banlist every unmarked item.",
+                    type = "execute",
+                    func = function()
+                        for k,v in pairs(a.db.profile.banlist) do
+                            if v == false then
+                                a.db.profile.banlist[k] = nil
+                            end
+                        end
+                    end,
+                    order = 60,
+                },
+            },
+        },
     },
 }
 
@@ -139,7 +182,8 @@ local function LootInfo(...)
     local icon = select(10, GetItemInfo(link))
     local rarity = select(3, GetItemInfo(link))
     local quantity = info[1]:match("x(%d*)\.$")
-    return icon, player, cPlayer, link, rarity, quantity
+    local itemID = info[1]:match("item:(%d*):")
+    return icon, player, cPlayer, link, rarity, quantity, itemID
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -233,8 +277,8 @@ mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
-        local icon, player, cPlayer, link, rarity, quantity = LootInfo(...)
-        if rarity >= db.rarity then
+        local icon, player, cPlayer, link, rarity, quantity, itemID = LootInfo(...)
+        if rarity >= db.rarity and not db.banlist[itemID] then
             fL[#fL+1] = pool:Acquire()
             mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
             fL[#fL]:SetParent(mf)
@@ -252,6 +296,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                 GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                 GameTooltip:SetHyperlink(link)
                 GameTooltip:AddLine(" ")
+                GameTooltip:AddDoubleLine("Middle click", "Add item to the ban list", 0,1,0)
                 GameTooltip:AddDoubleLine("Right click", "Dismiss", 0,1,0)
                 GameTooltip:AddDoubleLine("Shift+Right click", "Whisper player", 0,1,0)
                 GameTooltip:AddDoubleLine("Ctrl+Left click", "Dress item", 0,1,0)
@@ -274,6 +319,12 @@ m:SetScript("OnEvent", function(self, event, ...)
                     DressUpLink(link)
                 elseif button == "LeftButton" and IsShiftKeyDown() then
                     ChatEdit_InsertLink(link)
+                elseif button == "MiddleButton" then
+                    db.banlist[itemID] = true
+                    mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
+                    pool:Release(self)
+                    SortStack(pool, fL, anchor)
+                    print(addonName .. " item added to the ban list.")
                 end
             end)
             PlaySoundFile(LSM:Fetch("sound", db.sound))
