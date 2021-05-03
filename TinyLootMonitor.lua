@@ -4,11 +4,12 @@
 
 TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor")
 local a = TinyLootMonitor
+local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor", true)
 
 local LSM = LibStub("LibSharedMedia-3.0")
 LSM:Register("sound", "Ding", "Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
 
-local iColors = ITEM_QUALITY_COLORS
+local itemColors = ITEM_QUALITY_COLORS
 local toastHeight = 60
 
 local defaults = {
@@ -26,22 +27,22 @@ local options = {
     args = {
         description = {
             type = "description",
-            name = "A loot monitor.",
+            name = L["A loot monitor that tracks yours and group's loot."],
             fontSize = "medium",
             order = 5,
         },
         rarity = {
-            name = "Rarity",
-            desc = "Sets the minimum rarity TinyLootMonitor will track.",
+            name = L["Rarity"],
+            desc = L["Sets the minimum rarity TinyLootMonitor will track."],
             type = "select",
             values = { 
-                [0] = iColors[0].hex .. "Poor", 
-                [1] = iColors[1].hex .. "Common", 
-                [2] = iColors[2].hex .. "Uncommon", 
-                [3] = iColors[3].hex .. "Rare", 
-                [4] = iColors[4].hex .. "Epic",
-                [5] = iColors[5].hex .. "Legendary",
-                [6] = iColors[6].hex .. "Artifact" 
+                [0] = itemColors[0].hex .. ITEM_QUALITY0_DESC, 
+                [1] = itemColors[1].hex .. ITEM_QUALITY1_DESC, 
+                [2] = itemColors[2].hex .. ITEM_QUALITY2_DESC, 
+                [3] = itemColors[3].hex .. ITEM_QUALITY3_DESC, 
+                [4] = itemColors[4].hex .. ITEM_QUALITY4_DESC,
+                [5] = itemColors[5].hex .. ITEM_QUALITY5_DESC,
+                [6] = itemColors[6].hex .. ITEM_QUALITY6_DESC, 
             },
             style = "dropdown",
             get = function(info) return a.db.profile.rarity end,
@@ -49,8 +50,8 @@ local options = {
             order = 10,
         },
         numMax = {
-            name = "Maximum",
-            desc = "Sets the maximum number of toasts that will appear on screen.",
+            name = L["Maximum"],
+            desc = L["Sets the maximum number of toasts that will appear on screen."],
             type = "range",
             min = 1,
             max = 10,
@@ -62,8 +63,8 @@ local options = {
             order = 20,
         },
         delay = {
-            name = "Delay",
-            desc = "Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts.",
+            name = L["Delay"],
+            desc = L["Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts."],
             type = "range",
             min = 0,
             max = toastHeight,
@@ -75,7 +76,7 @@ local options = {
             order = 30,
         },
         anchor = {
-            name = "Show/Hide anchor",
+            name = L["Show/Hide anchor"],
             type = "execute",
             func = function()
                 if TinyLootMonitorAnchor:IsShown() then
@@ -87,8 +88,8 @@ local options = {
             order = 40,            
         },
         sound = {
-            name = "Sound",
-            desc = "The sound that plays when the toast appears.",
+            name = L["Sound"],
+            desc = L["The sound that plays when the toast appears."],
             type = "select",
             dialogControl = "LSM30_Sound",
             values = LSM:HashTable("sound"),
@@ -98,12 +99,12 @@ local options = {
         },
         banGroup = {
             type = "group",
-            name = "Ban List",
+            name = L["Ban List"],
             guiInline = true,
             args = {
                 banList = {
-                    name = "Items",
-                    desc = "List of items TLM won't show.",
+                    name = L["Items"],
+                    desc = L["List of items TLM won't show."],
                     type = "multiselect",
                     values = function()
                         items = {}
@@ -118,8 +119,8 @@ local options = {
                     order = 50,
                 },
                 clear = {
-                    name = "Clear Unmarked",
-                    desc = "Will remove from banlist every unmarked item.",
+                    name = L["Clear unmarked"],
+                    desc = L["Will remove from banlist every unmarked item."],
                     type = "execute",
                     func = function()
                         for k,v in pairs(a.db.profile.banlist) do
@@ -141,7 +142,7 @@ function a:OnInitialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", "Profiles", "TinyLootMonitor")
+    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", L["Profiles"], "TinyLootMonitor")
     db = a.db.profile
 end
 
@@ -230,7 +231,7 @@ anchor.bg = anchor:CreateTexture(nil, "BACKGROUND")
 anchor.bg:SetAllPoints()
 anchor.bg:SetColorTexture(0,1,0,0.2)
 anchor.text = anchor:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-anchor.text:SetText("TinyLootMonitor Anchor")
+anchor.text:SetText(L["TinyLootMonitor Anchor"])
 anchor.text:SetPoint("CENTER")
 anchor:Hide()
 
@@ -296,11 +297,11 @@ m:SetScript("OnEvent", function(self, event, ...)
                 GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                 GameTooltip:SetHyperlink(link)
                 GameTooltip:AddLine(" ")
-                GameTooltip:AddDoubleLine("Middle click", "Add item to the ban list", 0,1,0)
-                GameTooltip:AddDoubleLine("Right click", "Dismiss", 0,1,0)
-                GameTooltip:AddDoubleLine("Shift+Right click", "Whisper player", 0,1,0)
-                GameTooltip:AddDoubleLine("Ctrl+Left click", "Dress item", 0,1,0)
-                GameTooltip:AddDoubleLine("Shift+Left click", "Link item", 0,1,0)
+                GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
+                GameTooltip:AddDoubleLine(L["Right click"], L["Dismiss"], 0,1,0)
+                GameTooltip:AddDoubleLine(L["Shift+Right click"], L["Whisper player"], 0,1,0)
+                GameTooltip:AddDoubleLine(L["Ctrl+Left click"], L["Dress item"], 0,1,0)
+                GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
                 GameTooltip:Show()
                 anim:Stop()
             end)
@@ -324,7 +325,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                     mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                     pool:Release(self)
                     SortStack(pool, fL, anchor)
-                    print(addonName .. " item added to the ban list.")
+                    print(format("%s %s", addonName, L["item added to the ban list."]))
                 end
             end)
             PlaySoundFile(LSM:Fetch("sound", db.sound))
