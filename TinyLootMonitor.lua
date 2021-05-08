@@ -2,7 +2,7 @@
 -- https://freesound.org/people/Aiwha/sounds/196106/
 -- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
-TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor")
+TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0")
 local a = TinyLootMonitor
 local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor", true)
 
@@ -99,12 +99,11 @@ local options = {
         },
         banGroup = {
             type = "group",
-            name = L["Ban List"],
+            name = L["Ban list"],
             guiInline = true,
             args = {
                 banList = {
                     name = L["Items"],
-                    desc = L["List of items TLM won't show."],
                     type = "multiselect",
                     values = function()
                         items = {}
@@ -139,26 +138,14 @@ local options = {
 local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
+    db = a.db.profile
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", L["Profiles"], "TinyLootMonitor")
-    db = a.db.profile
+    TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
+    self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
 end
-
-function a:OnEnabled()
-    m:SetHeight((toastHeight + 5) * db.numMax) 
-end
-
-local backdrop = {
-	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
-	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
-	tile = true,
-	tileEdge = true,
-	tileSize = 20,
-	edgeSize = 20,
-	insets = { left = 4, right = 4, top = 4, bottom = 4 },
-}
 
 local fL = {}
 local nLoot = 1
@@ -173,18 +160,18 @@ local function GetKey(tab, value)
 end
 
 local function LootInfo(...)
-    local info = {...}
-    local link = info[1]:match("(|c.+|r)")
-    local guid = info[12]
-    local player = info[2]
-    local class = select(2, GetPlayerInfoByGUID(guid))
-    local classColor = C_ClassColor.GetClassColor(class)
-    local cPlayer = classColor:WrapTextInColorCode(player)
-    local icon = select(10, GetItemInfo(link))
-    local rarity = select(3, GetItemInfo(link))
-    local quantity = info[1]:match("x(%d*)\.$")
-    local itemID = info[1]:match("item:(%d*):")
-    return icon, player, cPlayer, link, rarity, quantity, itemID
+    local info        = {...}
+    local link        = info[1]:match("(|c.+|r)")
+    local guid        = info[12]
+    local player      = info[2]
+    local class       = select(2, GetPlayerInfoByGUID(guid))
+    local classColor  = C_ClassColor.GetClassColor(class)
+    local classPlayer = classColor:WrapTextInColorCode(player)
+    local icon        = select(10, GetItemInfo(link))
+    local rarity      = select(3, GetItemInfo(link))
+    local quantity    = info[1]:match("x(%d*)\.$")
+    local itemID      = info[1]:match("item:(%d*):")
+    return icon, player, classPlayer, link, rarity, quantity, itemID
 end
 
 local function SortStack(fPool, fList, fAnchor)
@@ -237,11 +224,19 @@ anchor:Hide()
 
 local function FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
-    f:SetBackdrop(backdrop)
+    f:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border-Maw",
+        tile = true,
+        tileEdge = true,
+        tileSize = 20,
+        edgeSize = 20,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
     f:SetSize(250,toastHeight)
     f:SetFrameStrata("HIGH")
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetSize(40,40)
+    f.icon:SetSize(38,38)
     f.icon:SetPoint("LEFT", f, "LEFT", 10, 0)
     f.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     f.name = f:CreateFontString(nil, "ARTWORK", "GameFontNormalLeft")
@@ -270,7 +265,6 @@ local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame", UIParent)
 m:SetFrameStrata("HIGH")
 m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
 m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
-m:SetHeight(300)
 m:Show()
 local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
 m:SetScrollChild(mf)
@@ -278,13 +272,13 @@ mf:SetWidth(m:GetWidth())
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
-        local icon, player, cPlayer, link, rarity, quantity, itemID = LootInfo(...)
+        local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
         if rarity >= db.rarity and not db.banlist[itemID] then
             fL[#fL+1] = pool:Acquire()
             mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
             fL[#fL]:SetParent(mf)
             fL[#fL].icon:SetTexture(icon)
-            fL[#fL].name:SetText(cPlayer)
+            fL[#fL].name:SetText(classPlayer)
             fL[#fL].item:SetText(link)
             fL[#fL].quantity:SetText(quantity)
             fL[#fL].order = nLoot

@@ -2,6 +2,7 @@
 ## Title: TinyLootMonitor
 ## Notes: A simple yet efficient loot monitor.
 ## Author: Beviselynt
+## Version: @project-version@
 ## SavedVariables: TinyLootMonitorDB
 
 Libs\LibStub.lua
@@ -11,8 +12,8 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
-Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
 
 Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.xml
 Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml

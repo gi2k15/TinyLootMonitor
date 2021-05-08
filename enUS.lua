@@ -12,14 +12,13 @@ if L then
     L["Show/Hide anchor"]                                                                = true
     L["Sound"]                                                                           = true
     L["The sound that plays when the toast appears."]                                    = true
-    L["Ban List"]                                                                        = true
+    L["Ban list"]                                                                        = true
     L["Items"]                                                                           = true
-    L["List of items TLM won't show."]                                                   = true
     L["Clear unmarked"]                                                                  = true
     L["Will remove from banlist every unmarked item."]                                   = true
     L["TinyLootMonitor Anchor"]                                                          = true
     L["Middle click"]                                                                    = true
-    L["Add to the ban list"]                                                        = true
+    L["Add to the ban list"]                                                             = true
     L["Right click"]                                                                     = true
     L["Dismiss"]                                                                         = true
     L["Shift+Right click"]                                                               = true
@@ -29,4 +28,5 @@ if L then
     L["Shift+Left click"]                                                                = true
     L["Link item"]                                                                       = true
     L["item added to the ban list."]                                                     = true
+    L["A simple yet efficient loot monitor."]                                            = true
 end
