@@ -13,11 +13,10 @@ Every time you or someone in your group loot an item, a toast will appear showin
 - The time the toasts will stay on screen;
 - The sound the toast will play when popped-up;
 - The anchor's place where the toasts will appear;
+- If **TLM** will fire only to equippable items;
 - A ban list. Items added to it won't fire **TLM**.
 
 You can open the config meny by typing `/tlm` or opening the Interface menu.
-
-![TinyLootMonitor setup](https://i.postimg.cc/tgPjhPYM/Wo-WScrn-Shot-050821-171219.jpg)
 
 Settings are saved in profiles, so you can set it up per character if you wish.
 

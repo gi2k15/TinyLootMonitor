@@ -18,6 +18,7 @@ local defaults = {
         numMax = 5,
         delay = 5,
         sound = "Ding",
+        equipable = false,
         banlist = {},
     },
 }
@@ -97,10 +98,19 @@ local options = {
             set = function(info,value) a.db.profile.sound = value end,
             order = 35,
         },
+        equipable = {
+            name = L["Equipable only"],
+            desc = L["Display only equipable items."],
+            type = "toggle",
+            get = function(info) return a.db.profile.equipable end,
+            set = function(info, value) a.db.profile.equipable = value end,
+            order = 50,
+        },
         banGroup = {
             type = "group",
             name = L["Ban list"],
             guiInline = true,
+            order = 1000,
             args = {
                 banList = {
                     name = L["Items"],
@@ -115,12 +125,13 @@ local options = {
                     end,
                     get = function(info, key) return a.db.profile.banlist[key] end,
                     set = function(info, key, value) a.db.profile.banlist[key] = value end,
-                    order = 50,
+                    order = 1010,
                 },
                 clear = {
                     name = L["Clear unmarked"],
                     desc = L["Will remove from banlist every unmarked item."],
                     type = "execute",
+                    order = 1020,
                     func = function()
                         for k,v in pairs(a.db.profile.banlist) do
                             if v == false then
@@ -128,7 +139,6 @@ local options = {
                             end
                         end
                     end,
-                    order = 60,
                 },
             },
         },
@@ -273,57 +283,61 @@ m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
-        if rarity >= db.rarity and not db.banlist[itemID] then
-            fL[#fL+1] = pool:Acquire()
-            mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
-            fL[#fL]:SetParent(mf)
-            fL[#fL].icon:SetTexture(icon)
-            fL[#fL].name:SetText(classPlayer)
-            fL[#fL].item:SetText(link)
-            fL[#fL].quantity:SetText(quantity)
-            fL[#fL].order = nLoot
-            nLoot = nLoot + 1
-            SortStack(pool, fL, anchor)
-            local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
-            if db.delay > 0 then anim:Play() end
-            fL[#fL]:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_NONE")
-                GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
-                GameTooltip:SetHyperlink(link)
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
-                GameTooltip:AddDoubleLine(L["Right click"], L["Dismiss"], 0,1,0)
-                GameTooltip:AddDoubleLine(L["Shift+Right click"], L["Whisper player"], 0,1,0)
-                GameTooltip:AddDoubleLine(L["Ctrl+Left click"], L["Dress item"], 0,1,0)
-                GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
-                GameTooltip:Show()
-                anim:Stop()
-            end)
-            fL[#fL]:SetScript("OnLeave", function(self)
-                GameTooltip:Hide()
+        if db.equipable and not IsEquippableItem(link) then 
+            return 
+        else
+            if rarity >= db.rarity and not db.banlist[itemID] then
+                fL[#fL+1] = pool:Acquire()
+                mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
+                fL[#fL]:SetParent(mf)
+                fL[#fL].icon:SetTexture(icon)
+                fL[#fL].name:SetText(classPlayer)
+                fL[#fL].item:SetText(link)
+                fL[#fL].quantity:SetText(quantity)
+                fL[#fL].order = nLoot
+                nLoot = nLoot + 1
+                SortStack(pool, fL, anchor)
+                local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
                 if db.delay > 0 then anim:Play() end
-            end)
-            fL[#fL]:SetScript("OnMouseUp", function(self, button)
-                if button == "RightButton" and IsShiftKeyDown() then
-                    SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
-                elseif button == "RightButton" then
-                    mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
-                    pool:Release(self)
-                    SortStack(pool, fL, anchor)
-                elseif button == "LeftButton" and IsControlKeyDown() then
-                    DressUpLink(link)
-                elseif button == "LeftButton" and IsShiftKeyDown() then
-                    ChatEdit_InsertLink(link)
-                elseif button == "MiddleButton" then
-                    db.banlist[itemID] = true
-                    mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
-                    pool:Release(self)
-                    SortStack(pool, fL, anchor)
-                    print(format("%s %s", addonName, L["item added to the ban list."]))
-                end
-            end)
-            PlaySoundFile(LSM:Fetch("sound", db.sound))
-            fL[#fL]:Show()
+                fL[#fL]:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_NONE")
+                    GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
+                    GameTooltip:SetHyperlink(link)
+                    GameTooltip:AddLine(" ")
+                    GameTooltip:AddDoubleLine(L["Right click"], L["Dismiss"], 0,1,0)
+                    GameTooltip:AddDoubleLine(L["Shift+Right click"], L["Whisper player"], 0,1,0)
+                    GameTooltip:AddDoubleLine(L["Ctrl+Left click"], L["Dress item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
+                    GameTooltip:Show()
+                    anim:Stop()
+                end)
+                fL[#fL]:SetScript("OnLeave", function(self)
+                    GameTooltip:Hide()
+                    if db.delay > 0 then anim:Play() end
+                end)
+                fL[#fL]:SetScript("OnMouseUp", function(self, button)
+                    if button == "RightButton" and IsShiftKeyDown() then
+                        SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
+                    elseif button == "RightButton" then
+                        mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
+                        pool:Release(self)
+                        SortStack(pool, fL, anchor)
+                    elseif button == "LeftButton" and IsControlKeyDown() then
+                        DressUpLink(link)
+                    elseif button == "LeftButton" and IsShiftKeyDown() then
+                        ChatEdit_InsertLink(link)
+                    elseif button == "MiddleButton" then
+                        db.banlist[itemID] = true
+                        mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
+                        pool:Release(self)
+                        SortStack(pool, fL, anchor)
+                        print(format("%s %s", addonName, L["item added to the ban list."]))
+                    end
+                end)
+                PlaySoundFile(LSM:Fetch("sound", db.sound))
+                fL[#fL]:Show()
+            end
         end
     end
 end)

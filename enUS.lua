@@ -12,6 +12,8 @@ if L then
     L["Show/Hide anchor"]                                                                = true
     L["Sound"]                                                                           = true
     L["The sound that plays when the toast appears."]                                    = true
+    L["Equipable only"]                                                                  = true
+    L["Display only equipable items."]                                                   = true           
     L["Ban list"]                                                                        = true
     L["Items"]                                                                           = true
     L["Clear unmarked"]                                                                  = true
