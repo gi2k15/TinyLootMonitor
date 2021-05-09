@@ -4,6 +4,7 @@
 ## Author: Beviselynt
 ## Version: @project-version@
 ## SavedVariables: TinyLootMonitorDB
+## X-Curse-Project-ID: 480555
 
 Libs\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
