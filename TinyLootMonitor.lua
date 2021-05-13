@@ -283,10 +283,8 @@ m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
-        if db.equipable and not IsEquippableItem(link) then 
-            return 
-        else
-            if rarity >= db.rarity and not db.banlist[itemID] then
+        if db.equipable and not IsEquippableItem(link) then return else
+            if itemID and rarity >= db.rarity and not db.banlist[itemID] then
                 fL[#fL+1] = pool:Acquire()
                 mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
                 fL[#fL]:SetParent(mf)
