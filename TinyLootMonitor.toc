@@ -1,6 +1,7 @@
 ## Interface: 90005
 ## Title: TinyLootMonitor
 ## Notes: A simple yet efficient loot monitor.
+## Notes-ruRU: Простой, но эффективный монитор добычи.
 ## Author: Beviselynt
 ## Version: @project-version@
 ## SavedVariables: TinyLootMonitorDB
@@ -19,6 +20,7 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.xml
 Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
-enUS.lua
+Locales\enUS.lua
+Locales\ruRU.lua
 
 TinyLootMonitor.lua

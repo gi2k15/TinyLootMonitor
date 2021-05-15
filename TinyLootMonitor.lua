@@ -4,13 +4,16 @@
 
 TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0")
 local a = TinyLootMonitor
-local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor", true)
+local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor")
 
 local LSM = LibStub("LibSharedMedia-3.0")
 LSM:Register("sound", "Ding", "Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
 
 local itemColors = ITEM_QUALITY_COLORS
 local toastHeight = 60
+local fL = {}
+local nLoot = 1
+local addonName = "|c002FC5D0TLM:|r"
 
 local defaults = {
     profile = {
@@ -148,7 +151,7 @@ local options = {
 local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
-    db = a.db.profile
+    db = self.db.profile
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
@@ -156,10 +159,6 @@ function a:OnInitialize()
     TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
     self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
 end
-
-local fL = {}
-local nLoot = 1
-local addonName = "|c002FC5D0TLM:|r"
 
 local function GetKey(tab, value)
     for k,v in pairs(tab) do
@@ -284,7 +283,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
         if db.equipable and not IsEquippableItem(link) then return else
-            if itemID and rarity >= db.rarity and not db.banlist[itemID] then
+            if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
                 fL[#fL+1] = pool:Acquire()
                 mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
                 fL[#fL]:SetParent(mf)
@@ -302,6 +301,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                     GameTooltip:SetHyperlink(link)
                     GameTooltip:AddLine(" ")
+                    GameTooltip:AddDoubleLine(L["Left click"], L["Equip item"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Right click"], L["Dismiss"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Shift+Right click"], L["Whisper player"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Ctrl+Left click"], L["Dress item"], 0,1,0)
