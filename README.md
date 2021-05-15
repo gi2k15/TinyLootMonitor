@@ -24,6 +24,7 @@ Settings are saved in profiles, so you can set it up per character if you wish.
 
 | Command           | Result                                             |
 |-------------------|----------------------------------------------------|
+| Left click        | Try to equip the item.                             |
 | Right click       | Dismiss the toast.                                 |
 | Shift+Right click | Whisper player who looted the item if he needs it. |
 | Shift+Left click  | Link the item.                                     |
