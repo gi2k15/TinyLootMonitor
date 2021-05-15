@@ -321,6 +321,8 @@ m:SetScript("OnEvent", function(self, event, ...)
                         mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                         pool:Release(self)
                         SortStack(pool, fL, anchor)
+                    elseif button == "LeftButton" and IsEquippableItem(link) and not InCombatLockdown() then
+                        EquipItemByName(link)
                     elseif button == "LeftButton" and IsControlKeyDown() then
                         DressUpLink(link)
                     elseif button == "LeftButton" and IsShiftKeyDown() then
