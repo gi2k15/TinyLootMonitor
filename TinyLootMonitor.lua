@@ -78,6 +78,7 @@ local options = {
             get = function(info) return a.db.profile.delay end,
             set = function(info,value) a.db.profile.delay = value end,
             order = 30,
+            hidden = true,
         },
         anchor = {
             name = L["Show/Hide anchor"],
@@ -294,8 +295,8 @@ m:SetScript("OnEvent", function(self, event, ...)
                 fL[#fL].order = nLoot
                 nLoot = nLoot + 1
                 SortStack(pool, fL, anchor)
-                local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
-                if db.delay > 0 then anim:Play() end
+                --local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
+                --if db.delay > 0 then anim:Play() end
                 fL[#fL]:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_NONE")
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
@@ -308,11 +309,11 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
                     GameTooltip:Show()
-                    anim:Stop()
+                    --anim:Stop()
                 end)
                 fL[#fL]:SetScript("OnLeave", function(self)
                     GameTooltip:Hide()
-                    if db.delay > 0 then anim:Play() end
+                    --if db.delay > 0 then anim:Play() end
                 end)
                 fL[#fL]:SetScript("OnMouseUp", function(self, button)
                     if button == "RightButton" and IsShiftKeyDown() then
