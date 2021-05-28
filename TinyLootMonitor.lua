@@ -2,7 +2,7 @@
 -- https://freesound.org/people/Aiwha/sounds/196106/
 -- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
-TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0")
+TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0", "AceTimer-3.0")
 local a = TinyLootMonitor
 local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor")
 
@@ -76,9 +76,8 @@ local options = {
             softMax = toastHeight,
             step = 1,
             get = function(info) return a.db.profile.delay end,
-            set = function(info,value) a.db.profile.delay = value end,
+            set = function(info, value) a.db.profile.delay = value end,
             order = 30,
-            hidden = true,
         },
         anchor = {
             name = L["Show/Hide anchor"],
@@ -185,13 +184,13 @@ local function LootInfo(...)
 end
 
 local function SortStack(fPool, fList, fAnchor)
+    if fPool.numActiveObjects == 0 then return end
     wipe(fList)
     local i = 1
     for widget in fPool:EnumerateActive() do
         fList[i] = widget
         i = i + 1
     end
-    if fList[1] == nil then return end
     sort(fList, function(a,b) return a.order < b.order end)
     fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
     if #fList > 1 then
@@ -199,22 +198,6 @@ local function SortStack(fPool, fList, fAnchor)
             fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
         end
     end
-end
-
-local function AnimateFrame(sChild, fPool, fList, fAnchor, delay)
-    local group = fList[#fList]:CreateAnimationGroup()
-    local fadeOut = group:CreateAnimation("Alpha")
-    fadeOut:SetFromAlpha(1)
-    fadeOut:SetToAlpha(0)
-    fadeOut:SetDuration(1)
-    fadeOut:SetSmoothing("OUT")
-    fadeOut:SetStartDelay(delay)
-    group:SetScript("OnFinished", function()
-        sChild:SetHeight(sChild:GetHeight() - 55)
-        fPool:Release(fList[#fList])
-        SortStack(fPool, fList, fAnchor)
-    end)
-    return group
 end
 
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor", UIParent)
@@ -261,10 +244,21 @@ local function FrameCreation(fPool)
     f.quantity:SetTextColor(1,1,0)
     f.quantity:SetJustifyH("RIGHT")
     f.quantity:SetPoint("BOTTOMRIGHT", f.icon, "BOTTOMRIGHT", -2, 2)
+    f.group = f:CreateAnimationGroup()
+    local fadeOut = f.group:CreateAnimation("Alpha")
+    fadeOut:SetFromAlpha(1)
+    fadeOut:SetToAlpha(0)
+    fadeOut:SetDuration(.5)
+    fadeOut:SetSmoothing("OUT")
+    fadeOut:SetScript("OnFinished", function()
+        fPool:Release(f)
+    end)
     return f
 end
 
 local function FrameResetter(fPool, frame)
+    frame.group:Stop()
+    frame:ClearAllPoints()
     frame:Hide()
 end
 
@@ -286,18 +280,21 @@ m:SetScript("OnEvent", function(self, event, ...)
         if db.equipable and not IsEquippableItem(link) then return else
             if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
                 fL[#fL+1] = pool:Acquire()
-                mf:SetHeight(mf:GetHeight() + fL[#fL]:GetHeight() + 5)
-                fL[#fL]:SetParent(mf)
-                fL[#fL].icon:SetTexture(icon)
-                fL[#fL].name:SetText(classPlayer)
-                fL[#fL].item:SetText(link)
-                fL[#fL].quantity:SetText(quantity)
-                fL[#fL].order = nLoot
+                local f = fL[#fL]
+                mf:SetHeight(mf:GetHeight() + f:GetHeight() + 5)
+                f:SetParent(mf)
+                f.icon:SetTexture(icon)
+                f.name:SetText(classPlayer)
+                f.item:SetText(link)
+                f.quantity:SetText(quantity)
+                f.order = nLoot
                 nLoot = nLoot + 1
-                SortStack(pool, fL, anchor)
-                --local anim = AnimateFrame(mf, pool, fL, anchor, db.delay)
-                --if db.delay > 0 then anim:Play() end
-                fL[#fL]:SetScript("OnEnter", function(self)
+                if db.delay > 0 then
+                    f.timer = a:ScheduleTimer(function()
+                        f.group:Play()
+                    end, db.delay)
+                end
+                f:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_NONE")
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                     GameTooltip:SetHyperlink(link)
@@ -309,13 +306,17 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
                     GameTooltip:Show()
-                    --anim:Stop()
+                    a:CancelTimer(f.timer)
                 end)
-                fL[#fL]:SetScript("OnLeave", function(self)
+                f:SetScript("OnLeave", function(self)
                     GameTooltip:Hide()
-                    --if db.delay > 0 then anim:Play() end
+                    if db.delay > 0 then
+                        f.timer = a:ScheduleTimer(function()
+                            f.group:Play()
+                        end, db.delay)
+                    end
                 end)
-                fL[#fL]:SetScript("OnMouseUp", function(self, button)
+                f:SetScript("OnMouseUp", function(self, button)
                     if button == "RightButton" and IsShiftKeyDown() then
                         SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                     elseif button == "RightButton" then
@@ -337,7 +338,8 @@ m:SetScript("OnEvent", function(self, event, ...)
                     end
                 end)
                 PlaySoundFile(LSM:Fetch("sound", db.sound))
-                fL[#fL]:Show()
+                SortStack(pool, fL, anchor)
+                f:Show()
             end
         end
     end
