@@ -22,6 +22,8 @@ local defaults = {
         delay = 5,
         sound = "Ding",
         equipable = false,
+        hideloot = true,
+        grow = "below",
         banlist = {},
     },
 }
@@ -64,7 +66,7 @@ local options = {
             softMax = 10,
             get = function(info) return a.db.profile.numMax end,
             set = function(info, value) a.db.profile.numMax = value end,
-            order = 20,
+            order = 30,
         },
         delay = {
             name = L["Delay"],
@@ -77,7 +79,7 @@ local options = {
             step = 1,
             get = function(info) return a.db.profile.delay end,
             set = function(info, value) a.db.profile.delay = value end,
-            order = 30,
+            order = 40,
         },
         anchor = {
             name = L["Show/Hide anchor"],
@@ -89,7 +91,7 @@ local options = {
                     TinyLootMonitorAnchor:Show()
                 end
             end,
-            order = 40,            
+            order = 50,            
         },
         sound = {
             name = L["Sound"],
@@ -99,7 +101,19 @@ local options = {
             values = LSM:HashTable("sound"),
             get = function(info) return a.db.profile.sound end,
             set = function(info,value) a.db.profile.sound = value end,
-            order = 35,
+            order = 20,
+        },
+        grow = {
+            name = L["Display direction"],
+            desc = L["Sets if the toasts will display above or below the anchor."],
+            type = "select",
+            values = {
+                above = L["Above"],
+                below = L["Below"],
+            },
+            get = function(info) return a.db.profile.grow end,
+            set = function(info,value) a.db.profile.grow = value; a:ChangeAnchor(value) end,
+            order = 25,
         },
         equipable = {
             name = L["Equipable only"],
@@ -107,7 +121,16 @@ local options = {
             type = "toggle",
             get = function(info) return a.db.profile.equipable end,
             set = function(info, value) a.db.profile.equipable = value end,
-            order = 50,
+            order = 51,
+        },
+        hideloot = {
+            name = L["Hide Blizzard's loot window"],
+            type = "toggle",
+            get = function(info) return a.db.profile.hideloot end,
+            set = function(info, value) a.db.profile.hideloot = value end,
+            width = "double",
+            order = 60,
+            hidden = true,
         },
         banGroup = {
             type = "group",
@@ -156,8 +179,10 @@ function a:OnInitialize()
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", L["Profiles"], "TinyLootMonitor")
-    TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
     self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
+
+    TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
+    self:ChangeAnchor(db.grow)
 end
 
 local function GetKey(tab, value)
@@ -183,19 +208,29 @@ local function LootInfo(...)
     return icon, player, classPlayer, link, rarity, quantity, itemID
 end
 
-local function SortStack(fPool, fList, fAnchor)
+local function SortStack(fPool, fList, fAnchor, direction)
     if fPool.numActiveObjects == 0 then return end
     wipe(fList)
     local i = 1
     for widget in fPool:EnumerateActive() do
         fList[i] = widget
+        fList[i]:ClearAllPoints()
         i = i + 1
     end
     sort(fList, function(a,b) return a.order < b.order end)
-    fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
-    if #fList > 1 then
-        for i = 2, #fList do
-            fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
+    if direction == "below" then
+        fList[1]:SetPoint("TOPLEFT", fAnchor, "BOTTOMLEFT", 0, -5)
+        if #fList > 1 then
+            for i = 2, #fList do
+                fList[i]:SetPoint("TOPLEFT", fList[i-1], "BOTTOMLEFT", 0, -5)
+            end
+        end
+    else
+        fList[1]:SetPoint("BOTTOMLEFT", fAnchor, "TOPLEFT", 0, 5)
+        if #fList > 1 then
+            for i = 2, #fList do
+                fList[i]:SetPoint("BOTTOMLEFT", fList[i-1], "TOPLEFT", 0, 5)
+            end
         end
     end
 end
@@ -267,12 +302,9 @@ local pool = CreateObjectPool(FrameCreation, FrameResetter)
 -- Monitor
 local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame", UIParent)
 m:SetFrameStrata("HIGH")
-m:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT")
-m:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT")
-m:Show()
-local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild")
+local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild", m)
 m:SetScrollChild(mf)
-mf:SetWidth(m:GetWidth())
+mf:SetAllPoints()
 m:RegisterEvent("CHAT_MSG_LOOT")
 m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
@@ -281,7 +313,6 @@ m:SetScript("OnEvent", function(self, event, ...)
             if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
                 fL[#fL+1] = pool:Acquire()
                 local f = fL[#fL]
-                mf:SetHeight(mf:GetHeight() + f:GetHeight() + 5)
                 f:SetParent(mf)
                 f.icon:SetTexture(icon)
                 f.name:SetText(classPlayer)
@@ -320,9 +351,8 @@ m:SetScript("OnEvent", function(self, event, ...)
                     if button == "RightButton" and IsShiftKeyDown() then
                         SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                     elseif button == "RightButton" then
-                        mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                         pool:Release(self)
-                        SortStack(pool, fL, anchor)
+                        SortStack(pool, fL, anchor, db.grow)
                     elseif button == "LeftButton" and IsEquippableItem(link) and not InCombatLockdown() then
                         EquipItemByName(link)
                     elseif button == "LeftButton" and IsControlKeyDown() then
@@ -331,16 +361,27 @@ m:SetScript("OnEvent", function(self, event, ...)
                         ChatEdit_InsertLink(link)
                     elseif button == "MiddleButton" then
                         db.banlist[itemID] = true
-                        mf:SetHeight(mf:GetHeight() - self:GetHeight() - 5)
                         pool:Release(self)
-                        SortStack(pool, fL, anchor)
+                        SortStack(pool, fL, anchor, db.grow)
                         print(format("%s %s", addonName, L["item added to the ban list."]))
                     end
                 end)
                 PlaySoundFile(LSM:Fetch("sound", db.sound))
-                SortStack(pool, fL, anchor)
+                SortStack(pool, fL, anchor, db.grow)
                 f:Show()
             end
         end
     end
 end)
+
+function a:ChangeAnchor(grow)
+    TinyLootMonitorScrollFrame:ClearAllPoints()
+    if grow == "below" then
+        TinyLootMonitorScrollFrame:SetPoint("TOPLEFT", TinyLootMonitorAnchor, "BOTTOMLEFT")
+        TinyLootMonitorScrollFrame:SetPoint("TOPRIGHT", TinyLootMonitorAnchor, "BOTTOMRIGHT")
+    else
+        TinyLootMonitorScrollFrame:SetPoint("BOTTOMLEFT", TinyLootMonitorAnchor, "TOPLEFT")
+        TinyLootMonitorScrollFrame:SetPoint("BOTTOMRIGHT", TinyLootMonitorAnchor, "TOPRIGHT")
+    end
+    SortStack(pool, fL, anchor, grow)
+end

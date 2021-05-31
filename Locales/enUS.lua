@@ -14,8 +14,13 @@ if L then
     L["Show/Hide anchor"]                                                                = true
     L["Sound"]                                                                           = true
     L["The sound that plays when the toast appears."]                                    = true
+    L["Display direction"]                                                               = true
+    L["Sets if the toasts will display above or below the anchor."]                      = true
+    L["Above"]                                                                           = true
+    L["Below"]                                                                           = true
     L["Equipable only"]                                                                  = true
-    L["Display only equipable items."]                                                   = true           
+    L["Display only equipable items."]                                                   = true
+    L["Hide Blizzard's loot window"]                                                     = true
     L["Ban list"]                                                                        = true
     L["Items"]                                                                           = true
     L["Clear unmarked"]                                                                  = true
