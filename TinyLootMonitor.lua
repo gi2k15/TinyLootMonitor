@@ -65,7 +65,7 @@ local options = {
             softMin = 1,
             softMax = 10,
             get = function(info) return a.db.profile.numMax end,
-            set = function(info, value) a.db.profile.numMax = value end,
+            set = function(info, value) a.db.profile.numMax = value; a:ChangeHeight() end,
             order = 30,
         },
         delay = {
@@ -181,7 +181,8 @@ function a:OnInitialize()
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", L["Profiles"], "TinyLootMonitor")
     self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
 
-    TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
+    -- Setup the ScrollFrame
+    self:ChangeHeight()
     self:ChangeAnchor(db.grow)
 end
 
@@ -292,6 +293,7 @@ local function FrameCreation(fPool)
 end
 
 local function FrameResetter(fPool, frame)
+    a:CancelTimer(frame.timer)
     frame.group:Stop()
     frame:ClearAllPoints()
     frame:Hide()
@@ -300,6 +302,23 @@ end
 local pool = CreateObjectPool(FrameCreation, FrameResetter)
 
 -- Monitor
+function a:ChangeAnchor(grow)
+    -- You have to clear points every time you set new ones.
+    TinyLootMonitorScrollFrame:ClearAllPoints()
+    if grow == "below" then
+        TinyLootMonitorScrollFrame:SetPoint("TOPLEFT", TinyLootMonitorAnchor, "BOTTOMLEFT")
+        TinyLootMonitorScrollFrame:SetPoint("TOPRIGHT", TinyLootMonitorAnchor, "BOTTOMRIGHT")
+    else
+        TinyLootMonitorScrollFrame:SetPoint("BOTTOMLEFT", TinyLootMonitorAnchor, "TOPLEFT")
+        TinyLootMonitorScrollFrame:SetPoint("BOTTOMRIGHT", TinyLootMonitorAnchor, "TOPRIGHT")
+    end
+    SortStack(pool, fL, anchor, grow)
+end
+
+function a:ChangeHeight()
+    TinyLootMonitorScrollFrame:SetHeight((toastHeight + 5) * db.numMax)
+end
+
 local m = CreateFrame("ScrollFrame", "TinyLootMonitorScrollFrame", UIParent)
 m:SetFrameStrata("HIGH")
 local mf = CreateFrame("Frame", "TinyLootMonitorScrollChild", m)
@@ -373,15 +392,3 @@ m:SetScript("OnEvent", function(self, event, ...)
         end
     end
 end)
-
-function a:ChangeAnchor(grow)
-    TinyLootMonitorScrollFrame:ClearAllPoints()
-    if grow == "below" then
-        TinyLootMonitorScrollFrame:SetPoint("TOPLEFT", TinyLootMonitorAnchor, "BOTTOMLEFT")
-        TinyLootMonitorScrollFrame:SetPoint("TOPRIGHT", TinyLootMonitorAnchor, "BOTTOMRIGHT")
-    else
-        TinyLootMonitorScrollFrame:SetPoint("BOTTOMLEFT", TinyLootMonitorAnchor, "TOPLEFT")
-        TinyLootMonitorScrollFrame:SetPoint("BOTTOMRIGHT", TinyLootMonitorAnchor, "TOPRIGHT")
-    end
-    SortStack(pool, fL, anchor, grow)
-end
