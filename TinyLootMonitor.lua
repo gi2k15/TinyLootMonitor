@@ -2,7 +2,7 @@
 -- https://freesound.org/people/Aiwha/sounds/196106/
 -- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
-TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0", "AceTimer-3.0")
+TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0")
 local a = TinyLootMonitor
 local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor")
 
@@ -78,7 +78,10 @@ local options = {
             softMax = toastHeight,
             step = 1,
             get = function(info) return a.db.profile.delay end,
-            set = function(info, value) a.db.profile.delay = value end,
+            set = function(info, value) 
+                a.db.profile.delay = value
+                wipe(a.pool)  
+                a.pool = CreateObjectPool(a.FrameCreation, a.FrameResetter) end,
             order = 40,
         },
         anchor = {
@@ -251,7 +254,7 @@ anchor.text:SetText(L["TinyLootMonitor Anchor"])
 anchor.text:SetPoint("CENTER")
 anchor:Hide()
 
-local function FrameCreation(fPool)
+function a.FrameCreation(fPool)
     local f = CreateFrame("Frame", nil, nil, "BackdropTemplate")
     f:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background-Maw",
@@ -286,20 +289,20 @@ local function FrameCreation(fPool)
     fadeOut:SetToAlpha(0)
     fadeOut:SetDuration(.5)
     fadeOut:SetSmoothing("OUT")
+    fadeOut:SetStartDelay(db.delay)
     fadeOut:SetScript("OnFinished", function()
         fPool:Release(f)
     end)
     return f
 end
 
-local function FrameResetter(fPool, frame)
-    a:CancelTimer(frame.timer)
+function a.FrameResetter(fPool, frame)
     frame.group:Stop()
     frame:ClearAllPoints()
     frame:Hide()
 end
 
-local pool = CreateObjectPool(FrameCreation, FrameResetter)
+a.pool = CreateObjectPool(a.FrameCreation, a.FrameResetter)
 
 -- Monitor
 function a:ChangeAnchor(grow)
@@ -312,7 +315,7 @@ function a:ChangeAnchor(grow)
         TinyLootMonitorScrollFrame:SetPoint("BOTTOMLEFT", TinyLootMonitorAnchor, "TOPLEFT")
         TinyLootMonitorScrollFrame:SetPoint("BOTTOMRIGHT", TinyLootMonitorAnchor, "TOPRIGHT")
     end
-    SortStack(pool, fL, anchor, grow)
+    SortStack(a.pool, fL, anchor, grow)
 end
 
 function a:ChangeHeight()
@@ -330,7 +333,7 @@ m:SetScript("OnEvent", function(self, event, ...)
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
         if db.equipable and not IsEquippableItem(link) then return else
             if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
-                fL[#fL+1] = pool:Acquire()
+                fL[#fL+1] = a.pool:Acquire()
                 local f = fL[#fL]
                 f:SetParent(mf)
                 f.icon:SetTexture(icon)
@@ -339,11 +342,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                 f.quantity:SetText(quantity)
                 f.order = nLoot
                 nLoot = nLoot + 1
-                if db.delay > 0 then
-                    f.timer = a:ScheduleTimer(function()
-                        f.group:Play()
-                    end, db.delay)
-                end
+                if db.delay > 0 then f.group:Play() end
                 f:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_NONE")
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
@@ -356,22 +355,18 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
                     GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
                     GameTooltip:Show()
-                    a:CancelTimer(f.timer)
+                    self.group:Stop()
                 end)
                 f:SetScript("OnLeave", function(self)
                     GameTooltip:Hide()
-                    if db.delay > 0 then
-                        f.timer = a:ScheduleTimer(function()
-                            f.group:Play()
-                        end, db.delay)
-                    end
+                    if db.delay > 0 then self.group:Play() end
                 end)
                 f:SetScript("OnMouseUp", function(self, button)
                     if button == "RightButton" and IsShiftKeyDown() then
                         SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                     elseif button == "RightButton" then
-                        pool:Release(self)
-                        SortStack(pool, fL, anchor, db.grow)
+                        a.pool:Release(self)
+                        SortStack(a.pool, fL, anchor, db.grow)
                     elseif button == "LeftButton" and IsEquippableItem(link) and not InCombatLockdown() then
                         EquipItemByName(link)
                     elseif button == "LeftButton" and IsControlKeyDown() then
@@ -380,13 +375,13 @@ m:SetScript("OnEvent", function(self, event, ...)
                         ChatEdit_InsertLink(link)
                     elseif button == "MiddleButton" then
                         db.banlist[itemID] = true
-                        pool:Release(self)
-                        SortStack(pool, fL, anchor, db.grow)
+                        a.pool:Release(self)
+                        SortStack(a.pool, fL, anchor, db.grow)
                         print(format("%s %s", addonName, L["item added to the ban list."]))
                     end
                 end)
                 PlaySoundFile(LSM:Fetch("sound", db.sound))
-                SortStack(pool, fL, anchor, db.grow)
+                SortStack(a.pool, fL, anchor, db.grow)
                 f:Show()
             end
         end
