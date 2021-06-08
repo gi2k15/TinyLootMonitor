@@ -22,5 +22,6 @@ Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
 
 Locales\enUS.lua
 Locales\ruRU.lua
+Locales\ptBR.lua
 
 TinyLootMonitor.lua
