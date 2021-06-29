@@ -1,4 +1,4 @@
-## Interface: 90005
+## Interface: 91000
 ## Title: TinyLootMonitor
 ## Notes: A simple yet efficient loot monitor.
 ## Notes-ruRU: Простой, но эффективный монитор добычи.

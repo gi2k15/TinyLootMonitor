@@ -1,8 +1,8 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("TinyLootMonitor", "enUS", true)
 
 if L then
-    --@localization(locale="enUS", format="lua_additive_table", same-key-is-true=true)@
-    --@do-not-package@
+--@localization(locale="enUS", format="lua_additive_table", same-key-is-true=true)@
+--@do-not-package@
     L["Profiles"]                                                                        = true
     L["A loot monitor that tracks yours and group's loot."]                              = true
     L["Rarity"]                                                                          = true
@@ -40,5 +40,5 @@ if L then
     L["Link item"]                                                                       = true
     L["item added to the ban list."]                                                     = true
     L["A simple yet efficient loot monitor."]                                            = true
-    --@end-do-not-package@
+--@end-do-not-package@
 end
