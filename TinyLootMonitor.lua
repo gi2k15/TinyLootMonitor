@@ -17,32 +17,32 @@ local addonName = "|c002FC5D0TLM:|r"
 
 local gearOptions = {
     [2] = {                         -- Weapons
-        [0] = L["1H axe"],
-        [1] = L["2H axe"],
-        [2] = L["Bow"],
+        [0]  = L["1H axe"],
+        [1]  = L["2H axe"],
+        [2]  = L["Bow"],
         [18] = L["Crossbow"],
         [15] = L["Dagger"],
         [20] = L["Fishing pole"],
         [13] = L["Fist weapon"],
-        [3] = L["Gun"],
-        [4] = L["1H mace"],
-        [5] = L["2H mace"],
-        [6] = L["Polearm"],
+        [3]  = L["Gun"],
+        [4]  = L["1H mace"],
+        [5]  = L["2H mace"],
+        [6]  = L["Polearm"],
         [10] = L["Stave"],
-        [7] = L["1H sword"],
-        [8] = L["2H sword"],
-        [16]  = L["Thrown weapon"],
+        [7]  = L["1H sword"],
+        [8]  = L["2H sword"],
+        [16] = L["Thrown weapon"],
         [19] = L["Wand"],
-        [9] = L["Warglaive"],
+        [9]  = L["Warglaive"],
         [17] = L["Spear"],
     },
     [4] = {                         -- Armor
-        [1] = L["Cloth"],
-        [2] = L["Leather"],
-        [3] = L["Mail"],
-        [4] = L["Plate"],
-        [5] = L["Cosmetic"],
-        [6] = L["Shield"],
+        [1]  = L["Cloth"],
+        [2]  = L["Leather"],
+        [3]  = L["Mail"],
+        [4]  = L["Plate"],
+        [5]  = L["Cosmetic"],
+        [6]  = L["Shield"],
         [11] = L["Relic"],
     },
     others = L["Others"],
@@ -310,6 +310,7 @@ local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
     db = self.db.profile
+    options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
