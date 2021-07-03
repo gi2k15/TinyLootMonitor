@@ -1,4 +1,8 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("TinyLootMonitor", "enUS", true)
+--@debug@
+local noError = true
+--@end-debug@
+
+local L = LibStub("AceLocale-3.0"):NewLocale("TinyLootMonitor", "enUS", true, noError)
 
 if L then
 --@localization(locale="enUS", format="lua_additive_table", same-key-is-true=true)@
