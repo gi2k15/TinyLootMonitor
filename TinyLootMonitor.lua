@@ -189,14 +189,6 @@ local options = {
                     set = function(info,value) a.db.profile.grow = value; a:ChangeAnchor(value) end,
                     order = 25,
                 },
-                equipable = {
-                    name = L["Equipable only"],
-                    desc = L["Display only equipable items."],
-                    type = "toggle",
-                    get = function(info) return a.db.profile.equipable end,
-                    set = function(info, value) a.db.profile.equipable = value end,
-                    order = 51,
-                },
                 hideloot = {
                     name = L["Hide Blizzard's loot window"],
                     type = "toggle",
@@ -219,7 +211,7 @@ local options = {
                     values = gearOptions[4],
                     get = function(info, key) return a.db.profile.gearOptions[4][key] end,
                     set = function(info, key, value) a.db.profile.gearOptions[4][key] = value end,
-                    order = 1,
+                    order = 10,
                 },
                 weapon = {
                     name = _G["WEAPON"],
@@ -227,20 +219,29 @@ local options = {
                     values = gearOptions[2],
                     get = function(info, key) return a.db.profile.gearOptions[2][key] end,
                     set = function(info, key, value) a.db.profile.gearOptions[2][key] = value end,
-                    order = 2,
+                    order = 20,
                 },
                 others = {
                     name = L["Others"],
+                    desc = L["Shows everything that's not a weapon or armor."],
                     type = "toggle",
                     get = function(info) return a.db.profile.gearOptions.others end,
                     set = function(info, value) a.db.profile.gearOptions.others = value end,
-                    width = "full",
-                    order = 3,
+                    order = 30,
+                },
+                equipable = {
+                    name = L["Equipable only"],
+                    desc = L["Display only equipable items."],
+                    type = "toggle",
+                    get = function(info) return a.db.profile.equipable end,
+                    set = function(info, value) a.db.profile.equipable = value end,
+                    width = "double",
+                    order = 35,
                 },
                 enableAll = {
                     name = L["Enable all"],
                     type = "execute",
-                    order = 4,
+                    order = 40,
                     func = function()
                         for k,v in pairs(a.db.profile.gearOptions[2]) do
                             a.db.profile.gearOptions[2][k] = true
@@ -254,7 +255,7 @@ local options = {
                 disableAll = {
                     name = L["Disable all"],
                     type = "execute",
-                    order = 5,
+                    order = 50,
                     func = function()
                         for k,v in pairs(a.db.profile.gearOptions[2]) do
                             a.db.profile.gearOptions[2][k] = false
@@ -285,13 +286,13 @@ local options = {
                     end,
                     get = function(info, key) return a.db.profile.banlist[key] end,
                     set = function(info, key, value) a.db.profile.banlist[key] = value end,
-                    order = 1010,
+                    order = 10,
                 },
                 clear = {
                     name = L["Clear unmarked"],
                     desc = L["Will remove from banlist every unmarked item."],
                     type = "execute",
-                    order = 1020,
+                    order = 20,
                     func = function()
                         for k,v in pairs(a.db.profile.banlist) do
                             if v == false then
@@ -367,6 +368,17 @@ local function SortStack(fPool, fList, fAnchor, direction)
                 fList[i]:SetPoint("BOTTOMLEFT", fList[i-1], "TOPLEFT", 0, 5)
             end
         end
+    end
+end
+
+local function IsGearChecked(link)
+    local classID, subclassID = select(6, GetItemInfoInstant(link))
+    if db.gearOptions[classID][subclassID] then 
+        return true
+    elseif classID ~= 2 and classID ~= 4 and db.gearOptions.others then 
+        return true
+    else 
+        return false 
     end
 end
 
@@ -463,7 +475,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
         if db.equipable and not IsEquippableItem(link) then return else
-            if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
+            if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] and IsGearChecked(link) then
                 fL[#fL+1] = a.pool:Acquire()
                 local f = fL[#fL]
                 f:SetParent(mf)
