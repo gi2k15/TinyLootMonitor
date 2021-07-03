@@ -16,7 +16,7 @@ local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
 
 local gearOptions = {
-    [2] = {                 -- Weapons
+    [2] = {                         -- Weapons
         [0] = L["1H axe"],
         [1] = L["2H axe"],
         [2] = L["Bow"],
@@ -36,7 +36,7 @@ local gearOptions = {
         [9] = L["Warglaive"],
         [17] = L["Spear"],
     },
-    [4] = {                 -- Armor
+    [4] = {                         -- Armor
         [1] = L["Cloth"],
         [2] = L["Leather"],
         [3] = L["Mail"],
@@ -45,6 +45,7 @@ local gearOptions = {
         [6] = L["Shield"],
         [11] = L["Relic"],
     },
+    others = L["Others"],
 }
 
 local defaults = {
@@ -58,7 +59,7 @@ local defaults = {
         grow = "below",
         banlist = {},
         gearOptions = {
-            [2] = {                 -- Weapons
+            [2] = {               -- Weapons
                 [0] = true,
                 [1] = true,
                 [2] = true,
@@ -78,7 +79,7 @@ local defaults = {
                 [9] = true,
                 [17] = true,
             },
-            [4] = {                 -- Armor
+            [4] = {               -- Armor
                 [1] = true,
                 [2] = true,
                 [3] = true,
@@ -87,6 +88,7 @@ local defaults = {
                 [6] = true,
                 [11] = true,
             },
+            others = true,
         },
     },
 }
@@ -217,6 +219,7 @@ local options = {
                     values = gearOptions[4],
                     get = function(info, key) return a.db.profile.gearOptions[4][key] end,
                     set = function(info, key, value) a.db.profile.gearOptions[4][key] = value end,
+                    order = 1,
                 },
                 weapon = {
                     name = _G["WEAPON"],
@@ -224,6 +227,43 @@ local options = {
                     values = gearOptions[2],
                     get = function(info, key) return a.db.profile.gearOptions[2][key] end,
                     set = function(info, key, value) a.db.profile.gearOptions[2][key] = value end,
+                    order = 2,
+                },
+                others = {
+                    name = L["Others"],
+                    type = "toggle",
+                    get = function(info) return a.db.profile.gearOptions.others end,
+                    set = function(info, value) a.db.profile.gearOptions.others = value end,
+                    width = "full",
+                    order = 3,
+                },
+                enableAll = {
+                    name = L["Enable all"],
+                    type = "execute",
+                    order = 4,
+                    func = function()
+                        for k,v in pairs(a.db.profile.gearOptions[2]) do
+                            a.db.profile.gearOptions[2][k] = true
+                        end
+                        for k,v in pairs(a.db.profile.gearOptions[4]) do
+                            a.db.profile.gearOptions[4][k] = true
+                        end
+                        a.db.profile.gearOptions.others = true
+                    end
+                },
+                disableAll = {
+                    name = L["Disable all"],
+                    type = "execute",
+                    order = 5,
+                    func = function()
+                        for k,v in pairs(a.db.profile.gearOptions[2]) do
+                            a.db.profile.gearOptions[2][k] = false
+                        end
+                        for k,v in pairs(a.db.profile.gearOptions[4]) do
+                            a.db.profile.gearOptions[4][k] = false
+                        end
+                        a.db.profile.gearOptions.others = false
+                    end
                 },
             },
         },

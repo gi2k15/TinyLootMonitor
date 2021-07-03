@@ -1,5 +1,6 @@
+local noError
 --@debug@
-local noError = true
+noError = true
 --@end-debug@
 
 local L = LibStub("AceLocale-3.0"):NewLocale("TinyLootMonitor", "enUS", true, noError)
