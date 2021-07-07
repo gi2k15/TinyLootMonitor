@@ -15,6 +15,39 @@ local fL = {}
 local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
 
+local gearOptions = {
+    [2] = {                         -- Weapons
+        [0]  = L["1H axe"],
+        [1]  = L["2H axe"],
+        [2]  = L["Bow"],
+        [18] = L["Crossbow"],
+        [15] = L["Dagger"],
+        [20] = L["Fishing pole"],
+        [13] = L["Fist weapon"],
+        [3]  = L["Gun"],
+        [4]  = L["1H mace"],
+        [5]  = L["2H mace"],
+        [6]  = L["Polearm"],
+        [10] = L["Stave"],
+        [7]  = L["1H sword"],
+        [8]  = L["2H sword"],
+        [16] = L["Thrown weapon"],
+        [19] = L["Wand"],
+        [9]  = L["Warglaive"],
+        [17] = L["Spear"],
+    },
+    [4] = {                         -- Armor
+        [1]  = L["Cloth"],
+        [2]  = L["Leather"],
+        [3]  = L["Mail"],
+        [4]  = L["Plate"],
+        [5]  = L["Cosmetic"],
+        [6]  = L["Shield"],
+        [11] = L["Relic"],
+    },
+    others = L["Others"],
+}
+
 local defaults = {
     profile = {
         rarity = 3,
@@ -25,11 +58,44 @@ local defaults = {
         hideloot = true,
         grow = "below",
         banlist = {},
+        gearOptions = {
+            [2] = {               -- Weapons
+                [0] = true,
+                [1] = true,
+                [2] = true,
+                [18] = true,
+                [15] = true,
+                [20] = true,
+                [13] = true,
+                [3] = true,
+                [4] = true,
+                [5] = true,
+                [6] = true,
+                [10] = true,
+                [7] = true,
+                [8] = true,
+                [16]  = true,
+                [19] = true,
+                [9] = true,
+                [17] = true,
+            },
+            [4] = {               -- Armor
+                [1] = true,
+                [2] = true,
+                [3] = true,
+                [4] = true,
+                [5] = true,
+                [6] = true,
+                [11] = true,
+            },
+            others = true,
+        },
     },
 }
 
 local options = {
     type = "group",
+    childGroups = "tab",
     args = {
         description = {
             type = "description",
@@ -37,109 +103,175 @@ local options = {
             fontSize = "medium",
             order = 5,
         },
-        rarity = {
-            name = L["Rarity"],
-            desc = L["Sets the minimum rarity TinyLootMonitor will track."],
-            type = "select",
-            values = { 
-                [0] = itemColors[0].hex .. ITEM_QUALITY0_DESC, 
-                [1] = itemColors[1].hex .. ITEM_QUALITY1_DESC, 
-                [2] = itemColors[2].hex .. ITEM_QUALITY2_DESC, 
-                [3] = itemColors[3].hex .. ITEM_QUALITY3_DESC, 
-                [4] = itemColors[4].hex .. ITEM_QUALITY4_DESC,
-                [5] = itemColors[5].hex .. ITEM_QUALITY5_DESC,
-                [6] = itemColors[6].hex .. ITEM_QUALITY6_DESC, 
+        general = {
+            type = "group",
+            name = L["General"],
+            order = 1,
+            args = {
+                rarity = {
+                    name = L["Rarity"],
+                    desc = L["Sets the minimum rarity TinyLootMonitor will track."],
+                    type = "select",
+                    values = { 
+                        [0] = itemColors[0].hex .. ITEM_QUALITY0_DESC, 
+                        [1] = itemColors[1].hex .. ITEM_QUALITY1_DESC, 
+                        [2] = itemColors[2].hex .. ITEM_QUALITY2_DESC, 
+                        [3] = itemColors[3].hex .. ITEM_QUALITY3_DESC, 
+                        [4] = itemColors[4].hex .. ITEM_QUALITY4_DESC,
+                        [5] = itemColors[5].hex .. ITEM_QUALITY5_DESC,
+                        [6] = itemColors[6].hex .. ITEM_QUALITY6_DESC, 
+                    },
+                    style = "dropdown",
+                    get = function(info) return a.db.profile.rarity end,
+                    set = function(info, val) a.db.profile.rarity = val end,
+                    order = 10,
+                },
+                numMax = {
+                    name = L["Maximum"],
+                    desc = L["Sets the maximum number of toasts that will appear on screen."],
+                    type = "range",
+                    min = 1,
+                    max = 10,
+                    step = 1,
+                    softMin = 1,
+                    softMax = 10,
+                    get = function(info) return a.db.profile.numMax end,
+                    set = function(info, value) a.db.profile.numMax = value; a:ChangeHeight() end,
+                    order = 30,
+                },
+                delay = {
+                    name = L["Delay"],
+                    desc = L["Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts."],
+                    type = "range",
+                    min = 0,
+                    max = toastHeight,
+                    softMin = 0,
+                    softMax = toastHeight,
+                    step = 1,
+                    get = function(info) return a.db.profile.delay end,
+                    set = function(info, value) 
+                        a.db.profile.delay = value
+                        wipe(a.pool)  
+                        a.pool = CreateObjectPool(a.FrameCreation, a.FrameResetter) end,
+                    order = 40,
+                },
+                anchor = {
+                    name = L["Show/Hide anchor"],
+                    type = "execute",
+                    func = function()
+                        if TinyLootMonitorAnchor:IsShown() then
+                            TinyLootMonitorAnchor:Hide()
+                        else
+                            TinyLootMonitorAnchor:Show()
+                        end
+                    end,
+                    order = 50,            
+                },
+                sound = {
+                    name = L["Sound"],
+                    desc = L["The sound that plays when the toast appears."],
+                    type = "select",
+                    dialogControl = "LSM30_Sound",
+                    values = LSM:HashTable("sound"),
+                    get = function(info) return a.db.profile.sound end,
+                    set = function(info,value) a.db.profile.sound = value end,
+                    order = 20,
+                },
+                grow = {
+                    name = L["Display direction"],
+                    desc = L["Sets if the toasts will display above or below the anchor."],
+                    type = "select",
+                    values = {
+                        above = L["Above"],
+                        below = L["Below"],
+                    },
+                    get = function(info) return a.db.profile.grow end,
+                    set = function(info,value) a.db.profile.grow = value; a:ChangeAnchor(value) end,
+                    order = 25,
+                },
+                hideloot = {
+                    name = L["Hide Blizzard's loot window"],
+                    type = "toggle",
+                    get = function(info) return a.db.profile.hideloot end,
+                    set = function(info, value) a.db.profile.hideloot = value end,
+                    width = "double",
+                    order = 60,
+                    hidden = true,
+                },
             },
-            style = "dropdown",
-            get = function(info) return a.db.profile.rarity end,
-            set = function(info, val) a.db.profile.rarity = val end,
-            order = 10,
         },
-        numMax = {
-            name = L["Maximum"],
-            desc = L["Sets the maximum number of toasts that will appear on screen."],
-            type = "range",
-            min = 1,
-            max = 10,
-            step = 1,
-            softMin = 1,
-            softMax = 10,
-            get = function(info) return a.db.profile.numMax end,
-            set = function(info, value) a.db.profile.numMax = value; a:ChangeHeight() end,
-            order = 30,
-        },
-        delay = {
-            name = L["Delay"],
-            desc = L["Time (in seconds) the toast will stay on screen. Set it to 0 for sticky toasts."],
-            type = "range",
-            min = 0,
-            max = toastHeight,
-            softMin = 0,
-            softMax = toastHeight,
-            step = 1,
-            get = function(info) return a.db.profile.delay end,
-            set = function(info, value) 
-                a.db.profile.delay = value
-                wipe(a.pool)  
-                a.pool = CreateObjectPool(a.FrameCreation, a.FrameResetter) end,
-            order = 40,
-        },
-        anchor = {
-            name = L["Show/Hide anchor"],
-            type = "execute",
-            func = function()
-                if TinyLootMonitorAnchor:IsShown() then
-                    TinyLootMonitorAnchor:Hide()
-                else
-                    TinyLootMonitorAnchor:Show()
-                end
-            end,
-            order = 50,            
-        },
-        sound = {
-            name = L["Sound"],
-            desc = L["The sound that plays when the toast appears."],
-            type = "select",
-            dialogControl = "LSM30_Sound",
-            values = LSM:HashTable("sound"),
-            get = function(info) return a.db.profile.sound end,
-            set = function(info,value) a.db.profile.sound = value end,
-            order = 20,
-        },
-        grow = {
-            name = L["Display direction"],
-            desc = L["Sets if the toasts will display above or below the anchor."],
-            type = "select",
-            values = {
-                above = L["Above"],
-                below = L["Below"],
+        gear = {
+            type = "group",
+            name = L["Gear"] .. " - BETA",
+            order = 2,
+            args = {
+                armor = {
+                    name = _G["ARMOR"],
+                    type = "multiselect",
+                    values = gearOptions[4],
+                    get = function(info, key) return a.db.profile.gearOptions[4][key] end,
+                    set = function(info, key, value) a.db.profile.gearOptions[4][key] = value end,
+                    order = 10,
+                },
+                weapon = {
+                    name = _G["WEAPON"],
+                    type = "multiselect",
+                    values = gearOptions[2],
+                    get = function(info, key) return a.db.profile.gearOptions[2][key] end,
+                    set = function(info, key, value) a.db.profile.gearOptions[2][key] = value end,
+                    order = 20,
+                },
+                others = {
+                    name = L["Others"],
+                    desc = L["Shows everything that's not a weapon or armor."],
+                    type = "toggle",
+                    get = function(info) return a.db.profile.gearOptions.others end,
+                    set = function(info, value) a.db.profile.gearOptions.others = value end,
+                    order = 30,
+                },
+                equipable = {
+                    name = L["Equipable only"],
+                    desc = L["Display only equipable items."],
+                    type = "toggle",
+                    get = function(info) return a.db.profile.equipable end,
+                    set = function(info, value) a.db.profile.equipable = value end,
+                    width = "double",
+                    order = 35,
+                },
+                enableAll = {
+                    name = L["Enable all"],
+                    type = "execute",
+                    order = 40,
+                    func = function()
+                        for k,v in pairs(a.db.profile.gearOptions[2]) do
+                            a.db.profile.gearOptions[2][k] = true
+                        end
+                        for k,v in pairs(a.db.profile.gearOptions[4]) do
+                            a.db.profile.gearOptions[4][k] = true
+                        end
+                        a.db.profile.gearOptions.others = true
+                    end
+                },
+                disableAll = {
+                    name = L["Disable all"],
+                    type = "execute",
+                    order = 50,
+                    func = function()
+                        for k,v in pairs(a.db.profile.gearOptions[2]) do
+                            a.db.profile.gearOptions[2][k] = false
+                        end
+                        for k,v in pairs(a.db.profile.gearOptions[4]) do
+                            a.db.profile.gearOptions[4][k] = false
+                        end
+                        a.db.profile.gearOptions.others = false
+                    end
+                },
             },
-            get = function(info) return a.db.profile.grow end,
-            set = function(info,value) a.db.profile.grow = value; a:ChangeAnchor(value) end,
-            order = 25,
-        },
-        equipable = {
-            name = L["Equipable only"],
-            desc = L["Display only equipable items."],
-            type = "toggle",
-            get = function(info) return a.db.profile.equipable end,
-            set = function(info, value) a.db.profile.equipable = value end,
-            order = 51,
-        },
-        hideloot = {
-            name = L["Hide Blizzard's loot window"],
-            type = "toggle",
-            get = function(info) return a.db.profile.hideloot end,
-            set = function(info, value) a.db.profile.hideloot = value end,
-            width = "double",
-            order = 60,
-            hidden = true,
         },
         banGroup = {
             type = "group",
             name = L["Ban list"],
-            guiInline = true,
-            order = 1000,
+            order = 3,
             args = {
                 banList = {
                     name = L["Items"],
@@ -154,13 +286,13 @@ local options = {
                     end,
                     get = function(info, key) return a.db.profile.banlist[key] end,
                     set = function(info, key, value) a.db.profile.banlist[key] = value end,
-                    order = 1010,
+                    order = 10,
                 },
                 clear = {
                     name = L["Clear unmarked"],
                     desc = L["Will remove from banlist every unmarked item."],
                     type = "execute",
-                    order = 1020,
+                    order = 20,
                     func = function()
                         for k,v in pairs(a.db.profile.banlist) do
                             if v == false then
@@ -178,6 +310,7 @@ local db
 function a:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("TinyLootMonitorDB", defaults)
     db = self.db.profile
+    options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
@@ -236,6 +369,17 @@ local function SortStack(fPool, fList, fAnchor, direction)
                 fList[i]:SetPoint("BOTTOMLEFT", fList[i-1], "TOPLEFT", 0, 5)
             end
         end
+    end
+end
+
+local function IsGearChecked(link)
+    local classID, subclassID = select(6, GetItemInfoInstant(link))
+    if db.gearOptions[classID][subclassID] then 
+        return true
+    elseif classID ~= 2 and classID ~= 4 and db.gearOptions.others then 
+        return true
+    else 
+        return false 
     end
 end
 
@@ -332,7 +476,7 @@ m:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local icon, player, classPlayer, link, rarity, quantity, itemID = LootInfo(...)
         if db.equipable and not IsEquippableItem(link) then return else
-            if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] then
+            if itemID and rarity and rarity >= db.rarity and not db.banlist[itemID] and IsGearChecked(link) then
                 fL[#fL+1] = a.pool:Acquire()
                 local f = fL[#fL]
                 f:SetParent(mf)
