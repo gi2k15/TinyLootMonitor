@@ -202,7 +202,7 @@ local options = {
         },
         gear = {
             type = "group",
-            name = L["Gear"],
+            name = L["Gear"] .. " - BETA",
             order = 2,
             args = {
                 armor = {
