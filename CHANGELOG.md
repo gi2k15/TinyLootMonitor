@@ -1,7 +1,4 @@
 # @project-version@
-### @project-date-iso@
+**@project-date-iso@**
 
-
-- Fixed a bug where necks, rings etc. were not firing the toasts.
-
-Send me a message if you think other types of items should be tracked by TLM.
+- Fixed a bug where an error was fired if you looted a non-weapon or armor item.

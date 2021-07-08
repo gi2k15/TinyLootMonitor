@@ -367,7 +367,8 @@ end
 local function IsGearChecked(link)
     -- [4][0] = Includes Spellstones, Firestones, Trinkets, Rings and Necks
     local classID, subclassID = select(6, GetItemInfoInstant(link))
-    if db.gearOptions[classID][subclassID] then 
+    local noError, item = pcall(function() return db.gearOptions[classID][subclassID] end)
+    if noError and item then 
         return true
     elseif db.gearOptions.others and classID == 4 and subclassID == 0 then
         return true
