@@ -322,14 +322,6 @@ function a:OnInitialize()
     self:ChangeAnchor(db.grow)
 end
 
-local function GetKey(tab, value)
-    for k,v in pairs(tab) do
-        if v == value then
-            return k
-        end
-    end
-end
-
 local function LootInfo(...)
     local info        = {...}
     local link        = info[1]:match("(|c.+|r)")
@@ -373,10 +365,13 @@ local function SortStack(fPool, fList, fAnchor, direction)
 end
 
 local function IsGearChecked(link)
+    -- [4][0] = Includes Spellstones, Firestones, Trinkets, Rings and Necks
     local classID, subclassID = select(6, GetItemInfoInstant(link))
     if db.gearOptions[classID][subclassID] then 
         return true
-    elseif classID ~= 2 and classID ~= 4 and db.gearOptions.others then 
+    elseif db.gearOptions.others and classID == 4 and subclassID == 0 then
+        return true
+    elseif db.gearOptions.others and classID ~= 2 and classID ~= 4 then 
         return true
     else 
         return false 
