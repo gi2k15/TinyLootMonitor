@@ -519,18 +519,19 @@ m:SetScript("OnEvent", function(self, event, ...)
                         SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                     elseif button == "RightButton" then
                         a.pool:Release(self)
-                        SortStack(a.pool, fL, anchor, db.grow)
-                    elseif button == "LeftButton" and IsEquippableItem(link) and not InCombatLockdown() then
-                        a.pool:Release(self)
-                        EquipItemByName(link)                        
+                        SortStack(a.pool, fL, anchor, db.grow)                      
                     elseif button == "LeftButton" and IsControlKeyDown() then
                         DressUpLink(link)
                     elseif button == "LeftButton" and IsShiftKeyDown() then
                         ChatEdit_InsertLink(link)
+                    elseif button == "LeftButton" and IsEquippableItem(link) and not InCombatLockdown() then
+                        a.pool:Release(self)
+                        EquipItemByName(link)
                     elseif button == "MiddleButton" and IsControlKeyDown() then
                         UncheckGearType(link)
                         a.pool:Release(self)
                         SortStack(a.pool, fL, anchor, db.grow)
+                        print(format("%s %s"), addonName, L["Gear type unchecked."])
                     elseif button == "MiddleButton" then
                         db.banlist[itemID] = true
                         a.pool:Release(self)
