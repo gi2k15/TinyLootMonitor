@@ -319,9 +319,7 @@ function a:OnInitialize()
     db = self.db.profile
     options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor/Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db))
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
-    LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor/Profiles", L["Profiles"], "TinyLootMonitor")
     self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
 
     -- Setup the ScrollFrame
