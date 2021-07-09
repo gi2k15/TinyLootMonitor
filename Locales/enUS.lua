@@ -66,5 +66,6 @@ L["Whisper player"] = true
 L["Add to the ban list"] = true
 L["Uncheck gear type"] = true
 L["item added to the ban list."] = true
+L["Gear type unchecked."] = true
 --@end-do-not-package@
 end
