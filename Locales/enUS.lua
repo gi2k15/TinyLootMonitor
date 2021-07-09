@@ -62,18 +62,13 @@ L["Clear unmarked"] = true
 L["Will remove from banlist every unmarked item."] = true
 L["Profiles"] = true
 L["TinyLootMonitor Anchor"] = true
-L["Left click"] = true
 L["Equip item"] = true
-L["Right click"] = true
-L["Dismiss"] = true
-L["Shift+Right click"] = true
-L["Whisper player"] = true
-L["Ctrl+Left click"] = true
 L["Dress item"] = true
-L["Shift+Left click"] = true
 L["Link item"] = true
-L["Middle click"] = true
+L["Dismiss"] = true
+L["Whisper player"] = true
 L["Add to the ban list"] = true
+L["Uncheck gear type"] = true
 L["item added to the ban list."] = true
 --@end-do-not-package@
 end
