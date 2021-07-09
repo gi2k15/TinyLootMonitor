@@ -15,6 +15,13 @@ local fL = {}
 local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
 
+-- Icons and keys
+local leftClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-leftbutton")
+local middleClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-middlebutton")
+local rightClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-rightbutton")
+local ctrl = CTRL_KEY_TEXT
+local shift = SHIFT_KEY_TEXT
+
 local gearOptions = {
     [2] = {                         -- Weapons
         [0]  = L["1H axe"],
@@ -379,6 +386,13 @@ local function IsGearChecked(link)
     end
 end
 
+local function UncheckGearType(link)
+    local classID, subclassID = select(6, GetItemInfoInstant(link))
+    if classID == 2 or classID == 4 then
+        db.gearOptions[classID][subclassID] = false
+    end
+end
+
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor", UIParent)
 anchor:SetSize(250,20)
 anchor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -224, -132)
@@ -488,12 +502,13 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                     GameTooltip:SetHyperlink(link)
                     GameTooltip:AddLine(" ")
-                    GameTooltip:AddDoubleLine(L["Left click"], L["Equip item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(L["Right click"], L["Dismiss"], 0,1,0)
-                    GameTooltip:AddDoubleLine(L["Shift+Right click"], L["Whisper player"], 0,1,0)
-                    GameTooltip:AddDoubleLine(L["Ctrl+Left click"], L["Dress item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(L["Shift+Left click"], L["Link item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(L["Middle click"], L["Add to the ban list"], 0,1,0)
+                    GameTooltip:AddDoubleLine(leftClick, L["Equip item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, leftClick), L["Dress item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", shift, leftClick), L["Link item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(rightClick, L["Dismiss"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, rightClick), L["Whisper player"], 0,1,0)
+                    GameTooltip:AddDoubleLine(middleClick, L["Add to the ban list"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, middleClick), L["Uncheck gear type"], 0,1,0)
                     GameTooltip:Show()
                     self.group:Stop()
                 end)
@@ -502,7 +517,7 @@ m:SetScript("OnEvent", function(self, event, ...)
                     if db.delay > 0 then self.group:Play() end
                 end)
                 f:SetScript("OnMouseUp", function(self, button)
-                    if button == "RightButton" and IsShiftKeyDown() then
+                    if button == "RightButton" and IsControlKeyDown() then
                         SendChatMessage("Do you need " .. link .. "?", "WHISPER", nil, player)
                     elseif button == "RightButton" then
                         a.pool:Release(self)
@@ -514,6 +529,10 @@ m:SetScript("OnEvent", function(self, event, ...)
                         DressUpLink(link)
                     elseif button == "LeftButton" and IsShiftKeyDown() then
                         ChatEdit_InsertLink(link)
+                    elseif button == "MiddleButton" and IsControlKeyDown() then
+                        UncheckGearType(link)
+                        a.pool:Release(self)
+                        SortStack(a.pool, fL, anchor, db.grow)
                     elseif button == "MiddleButton" then
                         db.banlist[itemID] = true
                         a.pool:Release(self)
