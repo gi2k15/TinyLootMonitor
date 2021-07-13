@@ -10,6 +10,7 @@ local LSM = LibStub("LibSharedMedia-3.0")
 LSM:Register("sound", "Ding", "Interface\\AddOns\\TinyLootMonitor\\ding.ogg")
 
 local itemColors = ITEM_QUALITY_COLORS
+local tooltipColor = "#D4F1F4"
 local toastHeight = 60
 local fL = {}
 local nLoot = 1
@@ -392,6 +393,15 @@ local function UncheckGearType(link)
     end
 end
 
+local function HexToRGB(hex)
+    hex = string.gsub(hex, "^#", "", 1)
+    local R = string.sub(hex, 1, 2)
+    local G = string.sub(hex, 3, 4)
+    local B = string.sub(hex, 5, 6)
+    R, G, B = tonumber(R, 16) / 255, tonumber(G, 16) / 255, tonumber(B, 16) / 255
+    return R, G, B
+end
+
 local anchor = CreateFrame("Frame", "TinyLootMonitorAnchor", UIParent)
 anchor:SetSize(250,20)
 anchor:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -224, -132)
@@ -501,13 +511,13 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT")
                     GameTooltip:SetHyperlink(link)
                     GameTooltip:AddLine(" ")
-                    GameTooltip:AddDoubleLine(leftClick, L["Equip item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, ctrl), L["Dress item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, shift), L["Link item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(rightClick, L["Dismiss"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", rightClick, ctrl), L["Whisper player"], 0,1,0)
-                    GameTooltip:AddDoubleLine(middleClick, L["Add to the ban list"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", middleClick, ctrl), L["Uncheck gear type"], 0,1,0)
+                    GameTooltip:AddDoubleLine(leftClick, L["Equip item"])
+                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, ctrl), L["Dress item"], HexToRGB(tooltipColor))
+                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, shift), L["Link item"], HexToRGB(tooltipColor))
+                    GameTooltip:AddDoubleLine(rightClick, L["Dismiss"])
+                    GameTooltip:AddDoubleLine(format("%s+%s", rightClick, ctrl), L["Whisper player"], HexToRGB(tooltipColor))
+                    GameTooltip:AddDoubleLine(middleClick, L["Add to the ban list"])
+                    GameTooltip:AddDoubleLine(format("%s+%s", middleClick, ctrl), L["Uncheck gear type"], HexToRGB(tooltipColor))
                     GameTooltip:Show()
                     self.group:Stop()
                 end)
