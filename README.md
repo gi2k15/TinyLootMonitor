@@ -35,6 +35,6 @@ Settings are saved in profiles, so you can set it up per character if you wish.
 
 If you want to translate a few strings, send me a message after you're done! Curse doesn't tell me when someone translates the addon. And thank you for your support!
 
-## I found a bug!
+## I've found a bug!
 
 Although **TLM** is flagged as release, some nasty bugs might still lurk around. If you found something, send me the error here in the comments. Thanks!
