@@ -16,9 +16,9 @@ local nLoot = 1
 local addonName = "|c002FC5D0TLM:|r"
 
 -- Icons and keys
-local leftClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-leftbutton")
-local middleClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-middlebutton")
-local rightClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-rightbutton")
+local leftClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-leftbutton", 14, 14)
+local middleClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-middlebutton", 14, 14)
+local rightClick = CreateAtlasMarkup("newplayertutorial-icon-mouse-rightbutton", 14, 14)
 local ctrl = CTRL_KEY_TEXT
 local shift = SHIFT_KEY_TEXT
 
@@ -388,6 +388,7 @@ local function UncheckGearType(link)
     local classID, subclassID = select(6, GetItemInfoInstant(link))
     if classID == 2 or classID == 4 then
         db.gearOptions[classID][subclassID] = false
+        print(format("%s %s", addonName, L["Gear type unchecked."]))
     end
 end
 
@@ -501,12 +502,12 @@ m:SetScript("OnEvent", function(self, event, ...)
                     GameTooltip:SetHyperlink(link)
                     GameTooltip:AddLine(" ")
                     GameTooltip:AddDoubleLine(leftClick, L["Equip item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, leftClick), L["Dress item"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", shift, leftClick), L["Link item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, ctrl), L["Dress item"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", leftClick, shift), L["Link item"], 0,1,0)
                     GameTooltip:AddDoubleLine(rightClick, L["Dismiss"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, rightClick), L["Whisper player"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", rightClick, ctrl), L["Whisper player"], 0,1,0)
                     GameTooltip:AddDoubleLine(middleClick, L["Add to the ban list"], 0,1,0)
-                    GameTooltip:AddDoubleLine(format("%s+%s", ctrl, middleClick), L["Uncheck gear type"], 0,1,0)
+                    GameTooltip:AddDoubleLine(format("%s+%s", middleClick, ctrl), L["Uncheck gear type"], 0,1,0)
                     GameTooltip:Show()
                     self.group:Stop()
                 end)
@@ -531,7 +532,6 @@ m:SetScript("OnEvent", function(self, event, ...)
                         UncheckGearType(link)
                         a.pool:Release(self)
                         SortStack(a.pool, fL, anchor, db.grow)
-                        print(format("%s %s"), addonName, L["Gear type unchecked."])
                     elseif button == "MiddleButton" then
                         db.banlist[itemID] = true
                         a.pool:Release(self)
