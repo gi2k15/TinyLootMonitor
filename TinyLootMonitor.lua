@@ -67,34 +67,8 @@ local defaults = {
         grow = "below",
         banlist = {},
         gearOptions = {
-            [2] = {               -- Weapons
-                [0] = true,
-                [1] = true,
-                [2] = true,
-                [18] = true,
-                [15] = true,
-                [20] = true,
-                [13] = true,
-                [3] = true,
-                [4] = true,
-                [5] = true,
-                [6] = true,
-                [10] = true,
-                [7] = true,
-                [8] = true,
-                [16]  = true,
-                [19] = true,
-                [9] = true,
-                [17] = true,
-            },
-            [4] = {               -- Armor
-                [1] = true,
-                [2] = true,
-                [3] = true,
-                [4] = true,
-                [5] = true,
-                [6] = true,
-                [11] = true,
+            ['**'] = {
+                ['**'] = true,
             },
             others = true,
         },
@@ -321,9 +295,21 @@ function a:OnInitialize()
     options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("TinyLootMonitor", options)
     LibStub("AceConfigDialog-3.0"):AddToBlizOptions("TinyLootMonitor")
+
+    -- Have to redefine db everytime the profile changes.
+    self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
+    self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
+    self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
+
     self:RegisterChatCommand("tlm", function() LibStub("AceConfigDialog-3.0"):Open("TinyLootMonitor") end)
 
     -- Setup the ScrollFrame
+    self:ChangeHeight()
+    self:ChangeAnchor(db.grow)
+end
+
+function a:RefreshConfig()
+    db = self.db.profile
     self:ChangeHeight()
     self:ChangeAnchor(db.grow)
 end
