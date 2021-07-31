@@ -2,6 +2,8 @@
 -- https://freesound.org/people/Aiwha/sounds/196106/
 -- CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
 
+local wipe, sort, select, pcall, print, format, pairs = wipe, sort, select, pcall, print, format, pairs
+
 TinyLootMonitor = LibStub("AceAddon-3.0"):NewAddon("TinyLootMonitor", "AceConsole-3.0")
 local a = TinyLootMonitor
 local L = LibStub("AceLocale-3.0"):GetLocale("TinyLootMonitor")
